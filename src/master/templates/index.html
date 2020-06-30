@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 col-sm-8 ml-auto mr-auto">
+        <figure>
+            <div id="history_graph">{{history_graph|safe}}</div>
+            <figcaption class="float-right">
+                <a href="/{{previous_zoom_point}}">
+                    <span id="history_graph_zoom_out" class="h4 oi oi-zoom-out text-muted" style="cursor:pointer;"></span>
+                </a>
+                <a href="/{{next_zoom_point}}">
+                    <span id="history_graph_zoom_in" class="h4 oi oi-zoom-in text-muted" style="cursor:pointer;"></span>
+                </a>
+            </figcaption>
+            <figcaption class="float-left">
+                <span class="h4 text-muted">{{instance_count.value}} instances</span>
+                <span class="h4 text-muted">&mdash; {{client_count.value}} clients</span>
+                <span class="h4 text-muted">&mdash; {{server_count.value}} servers</span>
+            </figcaption>
+        </figure>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="http://kozea.github.com/pygal.js/latest/pygal-tooltips.min.js"></script>
+{% endblock %}
