@@ -42,12 +42,15 @@ IW4MADMIN_AUTH_KEY=devdevdev</Environment>
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
-    <Content Include="requirements.txt" />
+    <Content Include="launch.sh" />
+    <Content Include="README.md" />
+    <Content Include="src\requirements.txt" />
     <Content Include="src\config\master.v0.json" />
     <Content Include="src\config\master.v1.json" />
     <Content Include="src\master\templates\index.html" />
     <Content Include="src\master\templates\layout.html" />
     <Content Include="src\master\templates\serverlist.html" />
+    <Content Include="src\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\master\context\base.py" />
