@@ -50,7 +50,6 @@ IW4MADMIN_AUTH_KEY=devdevdev</Environment>
     <Content Include="src\master\templates\index.html" />
     <Content Include="src\master\templates\layout.html" />
     <Content Include="src\master\templates\serverlist.html" />
-    <Content Include="src\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\master\context\base.py" />
@@ -71,7 +70,6 @@ IW4MADMIN_AUTH_KEY=devdevdev</Environment>
     <Compile Include="src\master\resources\instance.py" />
     <Compile Include="src\master\resources\localization.py" />
     <Compile Include="src\master\resources\health.py" />
-    <Compile Include="src\master\resources\server.py" />
     <Compile Include="src\master\resources\version.py" />
     <Compile Include="src\master\resources\__init__.py" />
     <Compile Include="src\master\flask\routes.py" />
