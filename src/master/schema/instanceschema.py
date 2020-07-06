@@ -2,6 +2,7 @@ from marshmallow import Schema, fields, post_load, validate
 from master.models.instancemodel import InstanceModel
 from master.schema.serverschema import ServerSchema
 
+
 class InstanceSchema(Schema):
     id = fields.String(
         required=True
@@ -24,4 +25,3 @@ class InstanceSchema(Schema):
     @post_load
     def make_instance(self, data, **kwargs):
         return InstanceModel(**data)
-

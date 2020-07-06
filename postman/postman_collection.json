@@ -1,0 +1,159 @@
+{
+	"info": {
+		"_postman_id": "3eee0545-9b6c-441b-b0a6-d3e3acce0f98",
+		"name": "IW4MAdmin-Master",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Penalty",
+			"item": [
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"guid\": \"{{$guid}}\",\n\t\"instance_guid\": \"{{$guid}}\",\n\t\"game\": \"IW4\",\n\t\"penalty_type\": \"Ban\",\n\t\"name\": \"UnknownSoldier\",\n\t\"ip_address\": \"127.0.0.1\",\n\t\"reason\": \"test\",\n\t\"meta\": {}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/event/penalty",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"event",
+								"penalty"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/event/penalty/{{$guid}}/{{$guid}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"event",
+								"penalty",
+								"{{$guid}}",
+								"{{$guid}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Version",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"current-version-stable\": \"2.2.1.0\",\n\t\"jwt-secret\" : \"my-development-secret-key\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/version",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"version"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1OTYyMzkwMjJ9.EkVnXRKgJd4xo6VVfYEsloYSW1_JiW_vSjE6dvsPs0w",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "48b54f44-a6e3-498d-843d-0774933450d6",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "875dc09e-ea44-4c42-bca3-a7bc50c592f8",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "526ca302-d9fd-4ee6-abb1-fb76ca17c81c",
+			"key": "BaseUrl",
+			"value": "http://127.0.0.1:8080",
+			"type": "string"
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -1,5 +1,6 @@
 import time
 
+
 class InstanceModel(object):
     def __init__(self, id, version, uptime, servers):
         self.id = id

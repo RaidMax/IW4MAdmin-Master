@@ -15,4 +15,4 @@ class Authenticate(Resource):
         expires = datetime.timedelta(days=30)
         token = create_access_token(instance_id, expires_delta=expires)
         ctx.add_token(instance_id, token)
-        return { 'access_token' : token }, 200
+        return {'access_token': token}, 200

@@ -1,14 +1,13 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from master.context.history import History
-from master.schema.instanceschema import InstanceSchema
 
 import jsonpickle
 import time
 import os
-import json
 
-class Base():
+
+class Base:
     def __init__(self):
         self.history = self._load_persistence()
         self._update_history_count(True)
@@ -24,21 +23,21 @@ class Base():
             replace_existing=True
         )
         self.scheduler.add_job(
-        func=self._update_history_count,
-        trigger=IntervalTrigger(seconds=30),
-        id='update history',
-        name='update client and instance count every 30 seconds',
-        replace_existing=True
+            func=self._update_history_count,
+            trigger=IntervalTrigger(seconds=30),
+            id='update history',
+            name='update client and instance count every 30 seconds',
+            replace_existing=True
         )
         self.scheduler.add_job(
-        func=self._persist,
-        trigger=IntervalTrigger(seconds=15),
-        id='persist history',
-        name='persists the history to disk',
-        replace_existing=True
+            func=self._persist,
+            trigger=IntervalTrigger(seconds=15),
+            id='persist history',
+            name='persists the history to disk',
+            replace_existing=True
         )
 
-    def _update_history_count(self, fill_empty = False):
+    def _update_history_count(self, fill_empty=False):
         if fill_empty:
             self.history.fill_empty_history()
         else:
@@ -73,7 +72,7 @@ class Base():
         if instance_id in self.instance_list.keys():
             return instance_id
         else:
-            False
+            return False
 
     def add_instance(self, instance):
         if instance.id in self.instance_list:
