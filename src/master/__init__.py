@@ -12,6 +12,8 @@ api = Api(app)
 ctx = Base()
 
 import master.flask.views
+import ecommerce.views
 import master.flask.routes
 from .util import filters
 
+import ecommerce.routes
