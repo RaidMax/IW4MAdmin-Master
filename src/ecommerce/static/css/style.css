@@ -1,0 +1,9 @@
+:root {
+  --primary-color: #1476D1;
+  --success-color: #0AD375;
+  --white-bg-color: #FBFBFB;
+}
+
+a.nav-link.active {
+    border-bottom: 1px var(--primary-color) solid;
+}

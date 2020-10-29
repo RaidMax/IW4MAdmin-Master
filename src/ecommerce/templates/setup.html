@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block meta_title %}Help & Setup{% endblock %}
+{% block meta_description %}Information on how to subscribe and configure IW4MAdmin{% endblock %}
+{% block content %}
+<div class="content">
+    <h2 class="content-title">Help &amp; Setup</h2>
+    <p>
+        After subscribing to your first plugin, you must enter your subscriber ID into your
+        <span class="code" title="Stored in the Configuration folder">IW4MAdminSettings.json</span> configuration file. <br/>
+        This is performed by setting the <span class="code">SubscriberId</span> property to the <span class="font-weight-bold">email address you used to subscribe with</span>.
+    </p>
+    <img src="{{ url_for('static', filename='image/subscription_id_config.jpg') }}" class="img-fluid rounded" alt="Example configuration value" title="Example configuration value"/>
+    <p>Don't forget to restart <a href="https://github.com/RaidMax/IW4M-Admin" target="_blank" class="badge">IW4MAdmin</a> [after saving your configuration] to load the new plugins.</p>
+    <hr/>
+</div>
+{% endblock %}

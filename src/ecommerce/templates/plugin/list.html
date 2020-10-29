@@ -1,0 +1,29 @@
+{% for plan in plans %}
+<div class="card">
+        <div class="d-flex flex-row flex-md-nowrap flex-wrap">
+            <div class="flex-fill">
+                <div class="mb-15">
+                    <h3 class="card-title mb-0">{{ plan.name }}</h3>
+                    <div>By {{ plan.meta.author }}</div>
+                    <span class="text-success font-size-12 font-weight-light">{{ plan.subscription_count }} subscribers</span>
+                </div>
+
+                <div class="text-muted mb-15">{{ plan.description }}</div>
+                <a class="link-inverse" target="_blank" href="{{ plan.meta.help_url }}" title="Get more information about {{ plan.name }}">Additional Information &amp; Help</a>
+            </div>
+
+            <div class="d-flex flex-row-reverse flex-md-row align-items-center align-self-start text-nowrap mt-15 mt-md-0">
+                {% if plan.price == '0.00' %}
+                    <div class="font-weight-bold mr-md-10 ml-10">Free</div>
+                {% else %}
+                    <div class="font-weight-bold mr-md-10 ml-10">${{ plan.price }} per {{ plan.period_unit }}</div>
+                {% endif %}
+
+                <a href="javascript:void(0)" class="btn btn-primary" data-cb-type="checkout" data-cb-plan-id="{{ plan.id }}" title="Subscribe to {{ plan.name }}">
+                    <span class="oi align-middle mr-5" data-glyph="cloud-download"></span>
+                    <span>Subscribe</span>
+                </a>
+            </div>
+    </div>
+</div>
+{% endfor %}

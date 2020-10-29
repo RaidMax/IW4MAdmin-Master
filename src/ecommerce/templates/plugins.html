@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block meta_title %}Available Plugins{% endblock %}
+{% block meta_description %}See all the plugins available for IW4MAdmin{% endblock %}
+{% block additional_scripts %}<script defer src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="{{ cb_project }}"></script>{% endblock %}
+{% block content %}
+<div class="content">
+    <h3 class="content-title">Available Plugins</h3>
+</div>
+{% include 'plugin/list.html' %}
+{% endblock %}

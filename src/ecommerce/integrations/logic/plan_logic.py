@@ -16,8 +16,9 @@ class PlanLogic:
         return [{
             'name': plan.name,
             'description': plan.description,
-            'price': plan.price,
+            'price': '{:.2f}'.format(plan.price / 100.0),
             'period_unit': plan.period_unit,
             'id': plan.id,
-            'meta': plan.meta_data
+            'meta': plan.meta_data,
+            'subscription_count': plan.subscription_count
         } for plan in plans]

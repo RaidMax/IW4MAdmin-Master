@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_restful import Resource, Api
+from flask_restful import Api
 from flask_jwt_extended import JWTManager
 from master.context.base import Base
 from os import environ
@@ -12,8 +12,6 @@ api = Api(app)
 ctx = Base()
 
 import master.flask.views
-import ecommerce.views
 import master.flask.routes
 from .util import filters
 
-import ecommerce.routes
