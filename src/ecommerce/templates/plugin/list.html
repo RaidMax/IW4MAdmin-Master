@@ -5,7 +5,7 @@
                 <div class="mb-15">
                     <h3 class="card-title mb-0">{{ plan.name }}</h3>
                     <div>By {{ plan.meta.author }}</div>
-                    <span class="text-success font-size-12 font-weight-light">{{ plan.subscription_count }} subscribers</span>
+                    <span class="text-success font-size-12 font-weight-light">{{ plan.subscription_count or '0' }} subscribers</span>
                 </div>
 
                 <div class="text-muted mb-15">{{ plan.description }}</div>
