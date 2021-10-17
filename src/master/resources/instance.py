@@ -23,11 +23,14 @@ class Instance(Resource):
     #@jwt_required
     def put(self, id):
         try:
-            for server in request.json['servers']:
+            remote_ip = request.remote_addr
+            for index in range(0, len(request.json['servers'])):
+                server = request.json['servers'][index]
                 if 'ip' not in server or IPAddress(server['ip']).is_private() or IPAddress(server['ip']).is_loopback():
-                    server['ip'] = request.remote_addr
+                    request.json['servers'][index]['ip'] = remote_ip
                 if 'version' not in server:
-                    server['version'] = 'Unknown'
+                    request.json['servers'][index]['version'] = 'Unknown'
+            request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:
             return {'message' : err.messages }, 400
@@ -37,11 +40,14 @@ class Instance(Resource):
     @jwt_required
     def post(self):
         try:
-            for server in request.json['servers']:
-               if 'ip' not in server or server['ip'] == 'localhost':
-                    server['ip'] = request.remote_addr
-               if 'version' not in server:
-                    server['version'] = 'Unknown'
+            remote_ip = request.remote_addr
+            for index in range(0, len(request.json['servers'])):
+                server = request.json['servers'][index]
+                if 'ip' not in server or IPAddress(server['ip']).is_private() or IPAddress(server['ip']).is_loopback():
+                    request.json['servers'][index]['ip'] = remote_ip
+                if 'version' not in server:
+                    request.json['servers'][index]['version'] = 'Unknown'
+            request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:
             print(err.messages)

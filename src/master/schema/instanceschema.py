@@ -20,6 +20,8 @@ class InstanceSchema(Schema):
     last_heartbeat = fields.Int(
         required=False
     )
+    ip_address = fields.String(required=False)
+    webfront_url = fields.String(required=False, missing=None)
 
     @post_load
     def make_instance(self, data, **kwargs):
