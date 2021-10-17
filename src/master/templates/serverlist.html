@@ -67,7 +67,7 @@
                     </thead>
                     <tbody>
 
-                        {% for server in servers %}
+                        {% for server in servers|sort(attribute='clientnum', reverse = True) %}
 
                         <tr class="server-row" data-toggle="modal" data-target="#serverModalCenter"
                             data-ip="{{server.ip}}" data-port="{{server.port}}">
@@ -103,7 +103,7 @@
         $('.server-row').off('click');
         $('.server-row').on('click', function (e) {
             $('#serverModalTitle').text($(this).find('.server-hostname').text());
-            $('#server_socket').text(`/connect ${$(this).data('ip')}:${$(this).data('port')}`);
+            $('#server_socket').text(`connect ${$(this).data('ip')}:${$(this).data('port')}`);
         });
 
         $('#connect_button').off('click');
