@@ -1,27 +1,8 @@
-﻿{% extends "layout.html" %}
+{% extends "layout.html" %}
 
 {% block content %}
-<!-- todo: move this! -->
-<style>
-    .server-row {
-        cursor: pointer;
-    }
-
-    .modal-content, .nav-item {
-        background-color: #212529;
-        color: #fff;
-    }
-
-    .modal-header, .modal-footer {
-        border-color: #32383e !important;
-    }
-
-    .modal-dark button.close, a.nav-link {
-        color: #fff;
-    }
-</style>
-
-<div class="modal modal-dark" id="serverModalCenter" tabindex="-1" role="dialog" aria-labelledby="serverModalCenterTitle" aria-hidden="true">
+<div class="modal modal-dark" id="serverModalCenter" tabindex="-1" role="dialog"
+     aria-labelledby="serverModalCenterTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -46,42 +27,56 @@
         <nav>
             <div class="nav nav-tabs" id="server_game_tabs" role="tablist">
                 {% for game in games %}
-                <a class="nav-item nav-link {{'active' if loop.first else ''}}" id="{{game}}_servers_tab" data-toggle="tab" href="#{{game}}_servers" role="tab" aria-controls="{{game}}_servers" aria-selected="{{'true' if loop.first else 'false' }}">{{game}}</a>
+                <a class="nav-item nav-link {{'active' if loop.first else ''}}" id="{{game}}_servers_tab"
+                   data-toggle="tab" href="#{{game}}_servers" role="tab" aria-controls="{{game}}_servers"
+                   aria-selected="{{'true' if loop.first else 'false' }}">
+                    <div class="text-center font-weight-bold">{{game}}</div>
+                    <div>{{games[game]|sum(attribute='clientnum')}} players &ndash; {{games[game]|length}} servers</div>
+                </a>
                 {% endfor %}
             </div>
         </nav>
         <div class="tab-content" id="server_game_tabs_content">
             {% for game, servers in games.items() %}
 
-            <div class="tab-pane {{'show active' if loop.first else ''}}" id="{{game}}_servers" role="tabpanel" aria-labelledby="{{game}}_servers_tab">
+            <div class="tab-pane {{'show active' if loop.first else ''}}" id="{{game}}_servers" role="tabpanel"
+                 aria-labelledby="{{game}}_servers_tab">
 
                 <table class="table table-dark table-striped table-hover table-responsive-lg">
                     <thead>
-                        <tr>
-                            <th>Server Name</th>
-                            <th>Map Name</th>
-                            <th>Players</th>
-                            <th>Mode</th>
-                            <th class="text-center">Connect</th>
-                        </tr>
+                    <tr>
+                        <th>Server Name</th>
+                        <th>Map Name</th>
+                        <th>Players</th>
+                        <th>Mode</th>
+                        <th class="text-center">Webfront</th>
+                        <th class="text-center">Connect</th>
+                    </tr>
                     </thead>
                     <tbody>
 
-                        {% for server in servers|sort(attribute='clientnum', reverse = True) %}
+                    {% for server in servers|sort(attribute='clientnum', reverse = True) %}
 
-                        <tr class="server-row" data-toggle="modal" data-target="#serverModalCenter"
-                            data-ip="{{server.ip}}" data-port="{{server.port}}">
-                            <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}" class="server-hostname">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}</td>
-                            <td data-map="{{server.map}} " class="server-map">{{server.map}}</td>
-                            <td data-clientnum="{{server.clientnum}}" data-maxclientnum="{{server.maxclientnum}}"
-                                class="server-clientnum">
-                                {{server.clientnum}}/{{server.maxclientnum}}
-                            </td>
-                            <td data-gametype="{{server.gametype}}" class="server-gametype">{{server.gametype}}</td>
-                            <td class="text-center"><span class="oi oi-play-circle"></span></td>
-                        </tr>
+                    <tr class="server-row" data-toggle="modal" data-target="#serverModalCenter"
+                        data-ip="{{server.ip}}" data-port="{{server.port}}">
+                        <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}"
+                            class="server-hostname">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
+                        </td>
+                        <td data-map="{{server.map}} " class="server-map">{{server.map}}</td>
+                        <td data-clientnum="{{server.clientnum}}" data-maxclientnum="{{server.maxclientnum}}"
+                            class="server-clientnum">
+                            {{server.clientnum}}/{{server.maxclientnum}}
+                        </td>
+                        <td data-gametype="{{server.gametype}}" class="server-gametype">{{server.gametype}}</td>
+                        <td class="text-center">
+                              <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
+                        </td>
+                        <td class="text-center">
+                            <a href="#"><span class="oi oi-play-circle"></span></a>
+                        </td>
+                    </tr>
 
-                        {% endfor %}
+                    {% endfor %}
 
                     </tbody>
                 </table>
@@ -90,14 +85,14 @@
             {% endfor %}
         </div>
         <div class="w-100 small text-right  text-muted">
-            <span>Developed by RaidMax</span><br />
+            <span>Developed by RaidMax</span><br/>
             <span>PRERELEASE</span>
         </div>
     </div>
 </div>
-    {% endblock %}
+{% endblock %}
 
-    {% block scripts %}
+{% block scripts %}
 <script>
     $(document).ready(() => {
         $('.server-row').off('click');
@@ -110,4 +105,25 @@
         $('#connect_button').on('click', (e) => alert('soon...'));
     });
 </script>
-    {% endblock %}
+{% endblock %}
+
+{% block styles %}
+<style>
+    .server-row {
+        cursor: pointer;
+    }
+
+    .modal-content, .nav-item {
+        background-color: #212529;
+        color: #fff;
+    }
+
+    .modal-header, .modal-footer {
+        border-color: #32383e !important;
+    }
+
+    .modal-dark button.close, a.nav-link {
+        color: #fff;
+    }
+</style>
+{% endblock %}

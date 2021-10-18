@@ -7,7 +7,8 @@
             <div id="history_graph">{{history_graph|safe}}</div>
             <figcaption class="float-right">
                 <a href="/{{previous_zoom_point}}">
-                    <span id="history_graph_zoom_out" class="h4 oi oi-zoom-out text-muted" style="cursor:pointer;"></span>
+                    <span id="history_graph_zoom_out" class="h4 oi oi-zoom-out text-muted"
+                          style="cursor:pointer;"></span>
                 </a>
                 <a href="/{{next_zoom_point}}">
                     <span id="history_graph_zoom_in" class="h4 oi oi-zoom-in text-muted" style="cursor:pointer;"></span>
@@ -24,5 +25,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="text/javascript" src="http://kozea.github.com/pygal.js/latest/pygal-tooltips.min.js"></script>
+<script type="text/javascript" src="https://kozea.github.io/pygal.js/latest/pygal-tooltips.min.js"></script>
 {% endblock %}

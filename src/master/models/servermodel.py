@@ -11,6 +11,11 @@ class ServerModel(object):
         self.map = map
         self.gametype = gametype
         self.ip = ip
+        self.instance = None
+
+    def set_instance(self, instance):
+        self.instance = instance
+        return self
 
     def __repr__(self):
         return '<ServerModel(id={id})>'.format(id=self.id)
