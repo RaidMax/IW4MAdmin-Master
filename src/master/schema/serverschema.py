@@ -1,10 +1,11 @@
 from marshmallow import Schema, fields, post_load, validate
 from master.models.servermodel import ServerModel
 
+
 class ServerSchema(Schema):
     id = fields.Int(
         required=True,
-        validate=validate.Range(min=11, max=25525525525565535, error='invalid id')
+        validate=validate.Range(min=-25525525525565535, max=25525525525565535, error='invalid id')
     )
     ip = fields.Str(
         required=True

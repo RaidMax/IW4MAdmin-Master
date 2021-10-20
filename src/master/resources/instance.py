@@ -5,7 +5,8 @@ from marshmallow import ValidationError
 from master.schema.instanceschema import InstanceSchema
 from master import ctx
 import json
-from netaddr import IPAddress
+from netaddr import IPAddress, AddrFormatError
+
 
 class Instance(Resource):
     def get(self, id=None):
@@ -26,7 +27,14 @@ class Instance(Resource):
             remote_ip = request.remote_addr
             for index in range(0, len(request.json['servers'])):
                 server = request.json['servers'][index]
-                if 'ip' not in server or IPAddress(server['ip']).is_private() or IPAddress(server['ip']).is_loopback():
+
+                parsed_ip = None
+                try:
+                    parsed_ip = IPAddress(server['ip'])
+                except AddrFormatError:
+                    pass
+
+                if 'ip' not in server or parsed_ip is None or parsed_ip.is_private() or parsed_ip.is_loopback():
                     request.json['servers'][index]['ip'] = remote_ip
                 if 'version' not in server:
                     request.json['servers'][index]['version'] = 'Unknown'
@@ -43,7 +51,14 @@ class Instance(Resource):
             remote_ip = request.remote_addr
             for index in range(0, len(request.json['servers'])):
                 server = request.json['servers'][index]
-                if 'ip' not in server or IPAddress(server['ip']).is_private() or IPAddress(server['ip']).is_loopback():
+
+                parsed_ip = None
+                try:
+                    parsed_ip = IPAddress(server['ip'])
+                except AddrFormatError:
+                    pass
+
+                if 'ip' not in server or parsed_ip is None or parsed_ip.is_private() or parsed_ip.is_loopback():
                     request.json['servers'][index]['ip'] = remote_ip
                 if 'version' not in server:
                     request.json['servers'][index]['version'] = 'Unknown'

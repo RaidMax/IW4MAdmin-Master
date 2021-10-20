@@ -69,7 +69,9 @@
                         </td>
                         <td data-gametype="{{server.gametype}}" class="server-gametype">{{server.gametype}}</td>
                         <td class="text-center">
-                              <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
+                              {% if server.instance.webfront_url %}
+                                <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
+                              {% endif %}
                         </td>
                         <td class="text-center">
                             <a href="#"><span class="oi oi-play-circle"></span></a>
