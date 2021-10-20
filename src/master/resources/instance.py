@@ -38,6 +38,7 @@ class Instance(Resource):
                     request.json['servers'][index]['ip'] = remote_ip
                 if 'version' not in server:
                     request.json['servers'][index]['version'] = 'Unknown'
+                request.json['servers'][index]['port'] = request.json['servers'][index]['port'] & 0xffff
             request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:
@@ -62,6 +63,7 @@ class Instance(Resource):
                     request.json['servers'][index]['ip'] = remote_ip
                 if 'version' not in server:
                     request.json['servers'][index]['version'] = 'Unknown'
+                request.json['servers'][index]['port'] = request.json['servers'][index]['port'] & 0xffff
             request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:

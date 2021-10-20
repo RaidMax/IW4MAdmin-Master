@@ -31,7 +31,7 @@ class InstanceModel(object):
         # make sure they're actually sending us an address and not trying to inject something
         match = re.match(url_regex, url)
 
-        if not match.groups():
+        if not match or not match.groups():
             return None
 
         address = match.groups()[1]
