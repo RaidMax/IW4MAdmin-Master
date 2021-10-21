@@ -1,11 +1,10 @@
-from master import api
-
-from master.resources.health import Health
-from master.resources.instance import Instance
-from master.resources.authenticate import Authenticate
-from master.resources.version import Version
-from master.resources.history_graph import HistoryGraph
-from master.resources.localization import Localization
+from .. import api
+from ..resources.health import Health
+from ..resources.instance import Instance
+from ..resources.authenticate import Authenticate
+from ..resources.version import Version
+from ..resources.history_graph import HistoryGraph
+from ..resources.localization import Localization
 
 api.add_resource(Health, '/health')
 api.add_resource(Instance, '/instance/', '/instance/<string:id>')

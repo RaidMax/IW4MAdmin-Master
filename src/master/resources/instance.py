@@ -1,10 +1,11 @@
+import logging
+
 from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
-from master.schema.instanceschema import InstanceSchema
-from master import ctx
-import json
+from ..schema.instanceschema import InstanceSchema
+from .. import ctx
 from netaddr import IPAddress, AddrFormatError
 
 
@@ -19,10 +20,10 @@ class Instance(Resource):
                 instance = ctx.get_instance(id)
                 return InstanceSchema().dump(instance)
             except KeyError:
-                return {'message' : 'instance not found'}, 404
+                return {'message': 'instance not found'}, 404
 
-    #@jwt_required
-    def put(self, id):
+    # @jwt_required
+    def put(self):
         try:
             remote_ip = request.remote_addr
             for index in range(0, len(request.json['servers'])):
@@ -42,9 +43,9 @@ class Instance(Resource):
             request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:
-            return {'message' : err.messages }, 400
+            return {'message': err.messages}, 400
         ctx.update_instance(instance)
-        return { 'message' : 'instance updated successfully' }, 200
+        return {'message': 'instance updated successfully'}, 200
 
     @jwt_required
     def post(self):
@@ -67,7 +68,7 @@ class Instance(Resource):
             request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:
-            print(err.messages)
-            return {'message' : err.messages }, 400
+            logging.warning('could not validate instance', exc_info=err, extra={'json': str(request.json)})
+            return {'message': err.messages}, 400
         ctx.add_instance(instance)
-        return { 'message' : 'instance added successfully' }, 200
+        return {'message': 'instance added successfully'}, 200

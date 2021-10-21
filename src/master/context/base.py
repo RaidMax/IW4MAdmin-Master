@@ -1,14 +1,15 @@
+import logging
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from master.context.history import History
-from master.schema.instanceschema import InstanceSchema
+from .history import History
 
 import jsonpickle
 import time
 import os
-import json
 
-class Base():
+
+class Base:
     def __init__(self):
         self.history = self._load_persistence()
         self._update_history_count(True)
@@ -24,21 +25,21 @@ class Base():
             replace_existing=True
         )
         self.scheduler.add_job(
-        func=self._update_history_count,
-        trigger=IntervalTrigger(seconds=30),
-        id='update history',
-        name='update client and instance count every 30 seconds',
-        replace_existing=True
+            func=self._update_history_count,
+            trigger=IntervalTrigger(seconds=30),
+            id='update history',
+            name='update client and instance count every 30 seconds',
+            replace_existing=True
         )
         self.scheduler.add_job(
-        func=self._persist,
-        trigger=IntervalTrigger(seconds=15),
-        id='persist history',
-        name='persists the history to disk',
-        replace_existing=True
+            func=self._persist,
+            trigger=IntervalTrigger(seconds=15),
+            id='persist history',
+            name='persists the history to disk',
+            replace_existing=True
         )
 
-    def _update_history_count(self, fill_empty = False):
+    def _update_history_count(self, fill_empty=False):
         if fill_empty:
             self.history.fill_empty_history()
         else:
@@ -55,44 +56,44 @@ class Base():
     def _remove_staleinstances(self):
         for key, value in list(self.instance_list.items()):
             if int(time.time()) - value.last_heartbeat > 60:
-                print('[_remove_staleinstances] removing stale instance {id}'.format(id=key))
+                logging.debug('[_remove_staleinstances] removing stale instance {id}'.format(id=key))
                 del self.instance_list[key]
                 del self.token_list[key]
-        print('[_remove_staleinstances] {count} active instances'.format(count=len(self.instance_list.items())))
+        logging.debug('[_remove_staleinstances] {count} active instances'.format(count=len(self.instance_list.items())))
 
     def get_instances(self):
         return self.instance_list.values()
 
     def get_instance_count(self):
-        return self.instance_list.count
+        return len(self.instance_list)
 
-    def get_instance(self, id):
-        return self.instance_list[id]
+    def get_instance(self, instance_id):
+        return self.instance_list[instance_id]
 
     def instance_exists(self, instance_id):
         if instance_id in self.instance_list.keys():
             return instance_id
         else:
-            False
+            return False
 
     def add_instance(self, instance):
         if instance.id in self.instance_list:
-            print('[add_instance] instance {id} already added, updating instead'.format(id=instance.id))
+            logging.debug('[add_instance] instance {id} already added, updating instead'.format(id=instance.id))
             return self.update_instance(instance)
         else:
-            print('[add_instance] adding instance {id}'.format(id=instance.id))
+            logging.debug('[add_instance] adding instance {id}'.format(id=instance.id))
             self.instance_list[instance.id] = instance
 
     def update_instance(self, instance):
         if instance.id not in self.instance_list:
-            print('[update_instance] instance {id} not added, adding instead'.format(id=instance.id))
+            logging.debug('[update_instance] instance {id} not added, adding instead'.format(id=instance.id))
             return self.add_instance(instance)
         else:
-            print('[update_instance] updating instance {id}'.format(id=instance.id))
+            logging.debug('[update_instance] updating instance {id}'.format(id=instance.id))
             self.instance_list[instance.id] = instance
 
     def add_token(self, instance_id, token):
-        print('[add_token] adding {token} for id {id}'.format(token=token, id=instance_id))
+        logging.debug('[add_token] adding {token} for id {id}'.format(token=token, id=instance_id))
         self.token_list[instance_id] = token
 
     def get_token(self, instance_id):
@@ -108,7 +109,8 @@ class Base():
             history_json = jsonpickle.encode(self.history)
             out_json.write(history_json)
 
-    def _load_persistence(self):
+    @staticmethod
+    def _load_persistence():
         if os.path.exists('./persistence/history.json'):
             with open('./persistence/history.json', 'r') as in_json:
                 history_json = in_json.read()

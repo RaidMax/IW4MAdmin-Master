@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse
-from flask_jwt_extended import jwt_required
-from master import app
+from .. import app
 import json
+
 
 class Version(Resource):
     def __init__(self):
@@ -14,9 +14,9 @@ class Version(Resource):
         return {
                    'current-version-stable': config['current-version-stable'],
                    'current-version-prerelease': config['current-version-prerelease']
-               }, 20
+               }, 200
 
-    #@jwt_required
+    # @jwt_required
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('current-version-stable')

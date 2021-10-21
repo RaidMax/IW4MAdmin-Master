@@ -1,10 +1,6 @@
-"""
-Routes and views for the flask application.
-"""
-
 from flask import render_template
-from master import app, ctx
-from master.resources.history_graph import HistoryGraph
+from .. import app, ctx
+from ..resources.history_graph import HistoryGraph
 from collections import defaultdict
 
 
@@ -26,8 +22,9 @@ def home(start):
 @app.route('/servers')
 def servers():
     server_dict = defaultdict(list)
-    if len(ctx.instance_list.values()) > 0:
-        ungrouped_servers = [server.set_instance(instance) for instance in ctx.instance_list.values() for server in instance.servers]
+    if ctx.instance_list.values():
+        ungrouped_servers = [server.set_instance(instance) for instance in ctx.instance_list.values() for server in
+                             instance.servers]
         for server_group in sorted(ungrouped_servers, key=lambda server: server.game):
             server_dict[server_group.game].append(server_group)
     return render_template('serverlist.html',

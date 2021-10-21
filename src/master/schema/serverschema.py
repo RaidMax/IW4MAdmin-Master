@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, post_load, validate
-from master.models.servermodel import ServerModel
+from ..models.servermodel import ServerModel
 
 
 class ServerSchema(Schema):
