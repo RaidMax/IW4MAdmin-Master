@@ -43,6 +43,7 @@ class Instance(Resource):
             request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:
+            logging.warning(f'could not validate instance: {str(request.json)}', exc_info=err)
             return {'message': err.messages}, 400
         ctx.update_instance(instance)
         return {'message': 'instance updated successfully'}, 200
@@ -68,7 +69,7 @@ class Instance(Resource):
             request.json['ip_address'] = remote_ip
             instance = InstanceSchema().load(request.json)
         except ValidationError as err:
-            logging.warning('could not validate instance', exc_info=err, extra={'json': str(request.json)})
+            logging.warning(f'could not validate instance: {str(request.json)}', exc_info=err)
             return {'message': err.messages}, 400
         ctx.add_instance(instance)
         return {'message': 'instance added successfully'}, 200

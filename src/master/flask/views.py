@@ -1,4 +1,6 @@
-from flask import render_template
+from flask import render_template, request
+from werkzeug.utils import redirect
+
 from .. import app, ctx
 from ..resources.history_graph import HistoryGraph
 from collections import defaultdict
@@ -30,3 +32,8 @@ def servers():
     return render_template('serverlist.html',
                            title='Server List',
                            games=server_dict)
+
+
+@app.route('/plugin_subscriptions')
+def hello():
+    return redirect(f'http://api.raidmax.org/plugin_subscriptions?subscription_id={request.args.get("subscription_id")}&instance_id={request.args.get("instance_id")}', code=302)

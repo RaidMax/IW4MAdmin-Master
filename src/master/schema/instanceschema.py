@@ -12,7 +12,7 @@ class InstanceSchema(Schema):
     servers = fields.Nested(
         ServerSchema,
         many=True,
-        validate=validate.Length(min=0, max=32, error='invalid server count')
+        validate=validate.Length(min=0, max=64, error='invalid server count')
     )
     uptime = fields.Int(
         required=True,

@@ -32,15 +32,16 @@ class ServerSchema(Schema):
     )
     maxclientnum = fields.Int(
         required=True,
-        validate=validate.Range(min=1, max=128, error='invalid maxclientnum')
+        validate=validate.Range(min=0, max=128, error='invalid maxclientnum')
     )
     map = fields.String(
         required=True,
         validate=validate.Length(min=0, max=128, error='invalid map name')
     )
     gametype = fields.String(
-        required=True,
-        validate=validate.Length(min=1, max=16, error='invalid gametype')
+        required=False,
+        validate=validate.Length(min=1, max=16, error='invalid gametype'),
+        missing="Unknown"
     )
 
     @post_load
