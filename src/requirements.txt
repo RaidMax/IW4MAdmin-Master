@@ -37,7 +37,7 @@ pytz==2020.1
 PyYAML==5.4
 requests==2.24.0
 requests-toolbelt==0.9.1
-rsa==4.6
+rsa==4.7
 shellescape==3.8.1
 six==1.15.0
 sseclient==0.0.27
