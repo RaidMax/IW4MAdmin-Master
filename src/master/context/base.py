@@ -1,4 +1,6 @@
+import json
 import logging
+from urllib import request
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -8,12 +10,16 @@ import jsonpickle
 import time
 import os
 
+from ..models.instancemodel import InstanceModel
+from ..schema.instanceschema import InstanceSchema
+
 
 class Base:
     def __init__(self):
+        self.debug = False
+        self.instance_list = {}
         self.history = self._load_persistence()
         self._update_history_count(True)
-        self.instance_list = {}
         self.token_list = {}
         self.scheduler = BackgroundScheduler()
         self.scheduler.start()
@@ -109,11 +115,29 @@ class Base:
             history_json = jsonpickle.encode(self.history)
             out_json.write(history_json)
 
-    @staticmethod
-    def _load_persistence():
+    def _load_persistence(self):
+        history = History()
         if os.path.exists('./persistence/history.json'):
             with open('./persistence/history.json', 'r') as in_json:
                 history_json = in_json.read()
                 if len(history_json) > 0:
-                    return jsonpickle.decode(history_json)
-        return History()
+                    history = jsonpickle.decode(history_json)
+
+        self._fill()
+
+        return history
+
+    def _fill(self):
+        is_debug = False
+        try:
+            is_debug = os.environ.get('IW4MADMIN_DEBUG') is not None
+        except KeyError:
+            pass
+        self.debug = is_debug
+
+        if self.debug:
+            with request.urlopen('http://192.223.26.190:5000/instance/') as response:
+                data = response.read()
+                encoding = response.info().get_content_charset('utf-8')
+                decoded = json.loads(data.decode(encoding))
+                self.instance_list = {instance['id']: InstanceSchema().load(instance)for instance in decoded}

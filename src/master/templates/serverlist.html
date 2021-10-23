@@ -27,11 +27,11 @@
         <nav>
             <div class="nav nav-tabs" id="server_game_tabs" role="tablist">
                 {% for game in games %}
-                <a class="nav-item nav-link {{'active' if loop.first else ''}}" id="{{game}}_servers_tab"
+                <a class="nav-item nav-link {{'active' if loop.first else ''}} rounded-0 col-12 col-lg-auto" id="{{game}}_servers_tab"
                    data-toggle="tab" href="#{{game}}_servers" role="tab" aria-controls="{{game}}_servers"
                    aria-selected="{{'true' if loop.first else 'false' }}">
                     <div class="text-center font-weight-bold">{{game}}</div>
-                    <div>{{games[game]|sum(attribute='clientnum')}} players &ndash; {{games[game]|length}} servers</div>
+                    <div class="text-center">{{games[game]|sum(attribute='clientnum')}} players &ndash; {{games[game]|length}} servers</div>
                 </a>
                 {% endfor %}
             </div>
@@ -42,15 +42,15 @@
             <div class="tab-pane {{'show active' if loop.first else ''}}" id="{{game}}_servers" role="tabpanel"
                  aria-labelledby="{{game}}_servers_tab">
 
-                <table class="table table-dark table-striped table-hover table-responsive-lg">
+                <table class="table table-dark table-striped table-hover ">
                     <thead>
                     <tr>
                         <th>Server Name</th>
                         <th>Map Name</th>
                         <th>Players</th>
                         <th>Mode</th>
-                        <th class="text-center">Webfront</th>
-                        <th class="text-center">Connect</th>
+                        <th class="text-center d-none d-lg-table-cell">Webfront</th>
+                        <th class="text-center d-none d-lg-table-cell">Connect</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -60,20 +60,20 @@
                     <tr class="server-row" data-toggle="modal" data-target="#serverModalCenter"
                         data-ip="{{server.ip}}" data-port="{{server.port}}">
                         <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}"
-                            class="server-hostname">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
+                            class="server-hostname text-break">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
                         </td>
-                        <td data-map="{{server.map}} " class="server-map">{{server.map}}</td>
+                        <td data-map="{{server.map}}" class="server-map text-break">{{server.map}}</td>
                         <td data-clientnum="{{server.clientnum}}" data-maxclientnum="{{server.maxclientnum}}"
                             class="server-clientnum">
                             {{server.clientnum}}/{{server.maxclientnum}}
                         </td>
-                        <td data-gametype="{{server.gametype}}" class="server-gametype">{{server.gametype}}</td>
-                        <td class="text-center">
+                        <td data-gametype="{{server.gametype}}" class="server-gametype text-break">{{server.gametype}}</td>
+                        <td class="text-center d-none d-lg-table-cell">
                             {% if server.instance.webfront_url %}
                             <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
                             {% endif %}
                         </td>
-                        <td class="text-center">
+                        <td class="text-center d-none d-lg-table-cell">
                             <a href="#"><span class="oi oi-play-circle"></span></a>
                         </td>
                     </tr>

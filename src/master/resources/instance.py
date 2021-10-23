@@ -23,7 +23,7 @@ class Instance(Resource):
                 return {'message': 'instance not found'}, 404
 
     # @jwt_required
-    def put(self):
+    def put(self, id):
         try:
             remote_ip = request.remote_addr
             for index in range(0, len(request.json['servers'])):

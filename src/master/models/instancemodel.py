@@ -13,7 +13,7 @@ url_regex = re.compile(
 
 
 class InstanceModel(object):
-    def __init__(self, id, version, uptime, servers, ip_address, webfront_url):
+    def __init__(self, id, version, uptime, servers, ip_address, webfront_url, **kwargs):
         self.id = id
         self.version = version
         self.uptime = uptime

@@ -42,17 +42,17 @@
 
 <body class="bg-dark">
 
-<div class="container-fluid body-content bg-dark">
-    <div class="row">
-        <div class="btn-group m-auto" role="group" aria-label="Servers">
-            <a href="/" type="button" class="btn btn-secondary pl-4 pr-4">Graph</a>
-            <a href="/servers" type="button" class="btn btn-secondary pl-4 pr-4">Servers</a>
-            <a href="https://github.com/RaidMax/IW4MAdmin-Master" target="_blank" type="button"
-               class="btn btn-secondary pl-4 pr-4">Source</a>
-        </div>
+<nav class="navbar navbar-expand navbar-dark bg-secondary justify-content-center border-bottom border-light mb-3">
+    <div class="navbar-nav">
+        <a href="/" class="nav-item nav-link bg-secondary pl-4 pr-4">Graph</a>
+        <a href="/servers" class="nav-item nav-link bg-secondary pl-4 pr-4">Servers</a>
+        <a href="https://github.com/RaidMax/IW4MAdmin-Master" target="_blank"
+           class="nav-item nav-link bg-secondary pl-4 pr-4">Source</a>
     </div>
-    {% block content %}{% endblock %}
+</nav>
 
+<div class="container-fluid body-content bg-dark">
+    {% block content %}{% endblock %}
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"
