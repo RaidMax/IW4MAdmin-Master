@@ -362,3 +362,6 @@ FodyWeavers.xsd
 # custom
 master_env
 persistence
+.idea/
+venv*
+config

@@ -1,0 +1,81 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{% block meta_description %}{% endblock %}">
+  <meta property="og:site_name" content="IW4MAdmin Plugins">
+  <meta property="og:url" content="https://store.raidmax.org">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://store.raidmax.org/static/image/brand.png">
+  <meta property="og:title" content="{% block meta_title %}{% endblock %} | IW4MAdmin">
+  <meta property="og:description" content="{{ self.meta_description() }}">
+
+  <title>{{ self.meta_title() }} | IW4MAdmin</title>
+  <link href="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/css/halfmoon-variables.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic.min.css" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+  <link rel="icon" type="image/ico" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <script defer src="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/js/halfmoon.min.js"></script>
+  {% block additional_scripts %}{% endblock %}
+</head>
+
+<body class="dark-mode with-custom-webkit-scrollbars with-custom-css-scrollbars" data-set-preferred-mode-onload="true">
+  <div class="page-wrapper with-navbar">
+    <div class="sticky-alerts"></div>
+    <nav class="navbar">
+      <a href="/" class="navbar-brand">
+        <picture>
+          <source class="img-fluid rounded" type="image/webp" srcset="{{ url_for('static', filename='image/brand.webp') }}">
+          <img src="{{ url_for('static', filename='image/brand.png') }}" class="img-fluid rounded">
+        </picture>
+
+      </a>
+      <!-- desktop -->
+      <ul class="navbar-nav d-none d-md-flex ml-0">
+        <li class="nav-item">
+          <a href="/" class="nav-link {{ 'active' if page_id == 'home' }}">Home</a>
+        </li>
+        <li class="nav-item">
+          <a href="/plugins" class="nav-link {{ 'active' if page_id == 'plugins' }}">Plugins</a>
+        </li>
+        <li class="nav-item">
+          <a href="/setup" class="nav-link {{ 'active' if page_id == 'setup' }}">Help</a>
+        </li>
+         <li class="nav-item">
+          <a href="/terms" class="nav-link {{ 'active' if page_id == 'terms' }}">Terms</a>
+        </li>
+      </ul>
+      <div class=" d-none d-md-flex ml-auto">
+        <div class="btn oi btn-square btn-action  mr-10" data-glyph="moon" onclick="halfmoon.toggleDarkMode()" title="Toggle display mode"></div>
+        <a href="javascript:void(0)" class="btn btn-primary" data-cb-type="portal" title="Manage your subscriptions">Manage Subscriptions</a>
+      </div>
+      <!-- mobile -->
+      <div class="navbar-content d-md-none ml-auto">
+        <div class="btn oi btn-square btn-action mr-10" data-glyph="moon" onclick="halfmoon.toggleDarkMode()"></div>
+        <div class="dropdown with-arrow">
+          <button class="btn btn-primary" data-toggle="dropdown" type="button" id="navbar-dropdown-toggle-btn-1">
+            Menu
+            <i class="fa fa-angle-down" aria-hidden="true"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right w-200" aria-labelledby="navbar-dropdown-toggle-btn-1">
+            <a href="/" class="dropdown-item">Home</a>
+            <a href="/plugins" class="dropdown-item">Plugins</a>
+            <a href="/setup" class="dropdown-item">Help</a>
+            <a href="/terms" class="dropdown-item">Terms</a>
+            <a href="javascript:void(0)" class="dropdown-item" data-cb-type="portal">Manage Subscriptions</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="container content-wrapper">
+      {% block content %}{% endblock %}
+      <div class="content d-flex">
+        <div class="ml-auto badge text-muted font-weight-light font-size-12">ForeverNone</div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
