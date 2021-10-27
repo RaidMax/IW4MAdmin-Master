@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    {% for key, value in stats.items() %}
+    <div class="col-12 col-md d-flex flex-column align-items-stretch">
+        <div class="text-center bg-light font-weight-bold">{{key}}</div>
+        <table class="table table-dark table-sm border">
+            <thead>
+            <tr>
+                <th>{{value[0][1]['metric_name']}}</th>
+                <th>{{value[0][1]['metric_count']}}</th>
+                <th>Percent</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in value %}
+            <tr>
+                <td>{{item[0]}}</td>
+                <td>{{item[1]['count']}}</td>
+                <td>{{item[1]['percent']}}%</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
