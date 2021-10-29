@@ -22,6 +22,10 @@ class InstanceModel(object):
         self.ip_address = ip_address
         self.webfront_url = self.__check_if_non_public(webfront_url, ip_address)
 
+    @property
+    def uptime_pretty(self):
+        return time.strftime('%H:%M:%S', time.gmtime(self.uptime))
+
     @staticmethod
     def __check_if_non_public(url, ip):
         # version is old and not sending webfront url, so we assume default port

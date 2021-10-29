@@ -1,6 +1,7 @@
+import datetime
+
 from flask import render_template, request
 from werkzeug.utils import redirect
-from itertools import groupby
 
 from .. import app, ctx
 from ..resources.history_graph import HistoryGraph
@@ -36,7 +37,11 @@ def servers():
 
 
 def count_by_key(source_key, source, dest_key, dest, sort_by='count', count_by='count', limit=9, metric_name='Metric',
-                 metric_count='Count'):
+                 metric_count='Count', formatter=None):
+    if not source:
+        dest[dest_key] = {}
+        return
+
     for instance in source:
         if not dest.get(dest_key):
             dest[dest_key] = {}
@@ -59,6 +64,9 @@ def count_by_key(source_key, source, dest_key, dest, sort_by='count', count_by='
         data['percent'] = round((data['count'] / max(data['total'], 1)) * 100)
 
     dest[dest_key] = sorted(dest[dest_key].items(), key=lambda d: d[1][sort_by], reverse=True)[:limit]
+    if formatter:
+        for tup in dest[dest_key]:
+            formatter(tup[1])
 
 
 @app.route('/stats')
@@ -70,10 +78,15 @@ def stats():
     count_by_key('version', ctx.instance_list.values(), 'Instances By Version', stats_dict, metric_name='Version', metric_count='Instance Count')
     count_by_key('game', flat_servers, 'Servers By Game', stats_dict, metric_name='Game', metric_count='Servers')
     count_by_key('game', flat_servers, 'Players By Game', stats_dict, count_by='clientnum', metric_name='Game', metric_count='Players')
-    count_by_key('gametype', flat_servers, 'Servers By GameType', stats_dict, metric_name='Game Type', metric_count='Servers')
-    count_by_key('gametype', flat_servers, 'Players By GameType', stats_dict, count_by='clientnum', metric_name='Game Type', metric_count='Players')
+    count_by_key('gametype', flat_servers, 'Servers By Game Type', stats_dict, metric_name='Game Type', metric_count='Servers')
+    count_by_key('gametype', flat_servers, 'Players By Game Type', stats_dict, count_by='clientnum', metric_name='Game Type', metric_count='Players')
     count_by_key('map', flat_servers, 'Servers By Map', stats_dict, metric_name='Map', metric_count='Servers')
     count_by_key('map', flat_servers, 'Players By Map', stats_dict, count_by='clientnum', metric_name='Map', metric_count='Players')
+
+    def uptime_formatter(item):
+        item['count'] = str(datetime.timedelta(seconds=item['count']))
+
+    count_by_key('ip_address', ctx.instance_list.values(), 'Uptime By Instance', stats_dict, count_by='uptime', metric_name='IP Address', metric_count='Uptime', formatter=uptime_formatter)
 
     return render_template('stats.html', title='Stats', stats=stats_dict)
 
