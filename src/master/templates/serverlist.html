@@ -15,7 +15,6 @@
                 <div class="h5" id="server_socket"></div>
             </div>
             <div class="modal-footer">
-                <button id="connect_button" type="button" class="btn btn-dark">Connect</button>
                 <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -57,8 +56,7 @@
 
                     {% for server in servers|sort(attribute='clientnum', reverse = True) %}
 
-                    <tr class="server-row" data-toggle="modal" data-target="#serverModalCenter"
-                        data-ip="{{server.ip}}" data-port="{{server.port}}">
+                    <tr class="server-row" data-ip="{{server.ip}}" data-port="{{server.port}}">
                         <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}"
                             class="server-hostname text-break">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
                         </td>
@@ -73,8 +71,8 @@
                             <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
                             {% endif %}
                         </td>
-                        <td class="text-center d-none d-lg-table-cell">
-                            <a href="#"><span class="oi oi-play-circle"></span></a>
+                        <td class="text-center d-none d-lg-table-cell" data-toggle="modal" data-target="#serverModalCenter">
+                            <a href="#" class="connect-button"><span class="oi oi-play-circle"></span></a>
                         </td>
                     </tr>
 
@@ -96,14 +94,12 @@
 {% block scripts %}
 <script>
     $(document).ready(() => {
-        $('.server-row').off('click');
-        $('.server-row').on('click', function (e) {
-            $('#serverModalTitle').text($(this).find('.server-hostname').text());
-            $('#server_socket').text(`connect ${$(this).data('ip')}:${$(this).data('port')}`);
+        $('.connect-button').off('click');
+        $('.connect-button').on('click', function (e) {
+            const parent = $(this).parents('.server-row');
+            $('#serverModalTitle').text($(parent).find('.server-hostname').text());
+            $('#server_socket').text(`connect ${$(parent).data('ip')}:${$(parent).data('port')}`);
         });
-
-        $('#connect_button').off('click');
-        $('#connect_button').on('click', (e) => alert('soon...'));
     });
 </script>
 {% endblock %}
