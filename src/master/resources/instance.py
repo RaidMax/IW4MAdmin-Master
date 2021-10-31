@@ -32,7 +32,7 @@ class Instance(Resource):
                 parsed_ip = None
                 try:
                     parsed_ip = IPAddress(server['ip'])
-                except AddrFormatError:
+                except (AddrFormatError, KeyError):
                     pass
 
                 if 'ip' not in server or parsed_ip is None or parsed_ip.is_private() or parsed_ip.is_loopback():
@@ -58,7 +58,7 @@ class Instance(Resource):
                 parsed_ip = None
                 try:
                     parsed_ip = IPAddress(server['ip'])
-                except AddrFormatError:
+                except (AddrFormatError, KeyError):
                     pass
 
                 if 'ip' not in server or parsed_ip is None or parsed_ip.is_private() or parsed_ip.is_loopback():
