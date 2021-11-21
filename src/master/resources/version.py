@@ -34,7 +34,7 @@ class Version(Resource):
             config['current-version-prerelease'] = args['current-version-prerelease']
 
         if args['jwt-secret'] == app.config['JWT_SECRET_KEY']:
-            with open('{0}/{1}.json'.format(self.config_folder, self.master_file_name), 'w') as out_json:
+            with open('{0}/{1}.v1.json'.format(self.config_folder, self.master_file_name), 'w') as out_json:
                 json.dump(config, out_json, indent=4)
 
             return {'message': 'stable is {0}, prerelease is {1}'.format(config['current-version-stable'],
