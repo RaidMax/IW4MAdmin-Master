@@ -15,7 +15,7 @@ class PlanData:
         :return:
         """
         try:
-            plans_response = chargebee.Plan.list({'status[is]': 'active'}).response
+            plans_response = chargebee.Plan.list({'status[is]': 'active', 'limit': 100}).response
             plans = BoxList(plan['plan'] for plan in plans_response)
 
             if not plans:
