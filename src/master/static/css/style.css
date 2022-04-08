@@ -1,0 +1,32 @@
+a.nav-link.active {
+    border-bottom: 1px var(--primary-color) solid;
+}
+
+.active {
+    stroke-width: initial !important;
+}
+
+.oi:hover {
+    color: #fff !important;
+}
+
+.dot {
+    opacity: 0;
+    padding: 5px;
+}
+
+.dot:hover {
+    opacity: 1;
+}
+
+.tooltip-box {
+    fill: #343a40 !important;
+}
+
+.server-row {
+    cursor: pointer;
+}
+
+#history_graph  {
+    //margin: -4rem;
+}

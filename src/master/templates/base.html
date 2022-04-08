@@ -1,0 +1,100 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}{% endblock %}">
+    <meta property="og:site_name" content="IW4MAdmin Master">
+    <meta property="og:url" content="http://api.raidmax.org:5000">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://store.raidmax.org/static/image/brand.png">
+    <meta property="og:title" content="{% block meta_title %}{% endblock %} | IW4MAdmin Master">
+    <meta property="og:description" content="{{ self.meta_description() }}">
+
+    <title>{{ self.meta_title() }} | IW4MAdmin Master</title>
+    <link href="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/css/halfmoon-variables.min.css" rel="stylesheet"/>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css"
+          integrity="sha256-BJ/G+e+y7bQdrYkS2RBTyNfBHpA9IuGaPmf9htub5MQ=" crossorigin="anonymous"/>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+    <link rel="icon" type="image/ico" href="{{ url_for('static', filename='image/favicon.ico') }}">
+</head>
+
+<body class="dark-mode with-custom-webkit-scrollbars with-custom-css-scrollbars" data-set-preferred-mode-onload="true">
+
+<div class="modal" id="serverModalCenter" tabindex="-1" role="dialog"
+     aria-labelledby="serverModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <a href="#" class="close" role="button" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </a>
+            <h5 class="modal-title" id="modalTitle"></h5>
+            <div class="h5 mb-10" id="modalContent"></div>
+            <div class="text-right">
+                <a href="#" class="btn btn-primary text-right" role="button">Close</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper with-navbar">
+    <div class="sticky-alerts"></div>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <picture class="mt-5">
+                <source class="img-fluid rounded" type="image/webp"
+                        srcset="{{ url_for('static', filename='image/brand.webp') }}">
+                <img src="{{ url_for('static', filename='image/brand.png') }}" class="img-fluid rounded">
+            </picture>
+        </a>
+        <!-- desktop -->
+        <ul class="navbar-nav d-none d-md-flex ml-0">
+            <li class="nav-item">
+                <a href="/" class="nav-link {{ 'active' if page_id == 'graph' }}">Graph</a>
+            </li>
+            <li class="nav-item">
+                <a href="/servers" class="nav-link {{ 'active' if page_id == 'servers' }}">Servers</a>
+            </li>
+            <li class="nav-item">
+                <a href="/stats" class="nav-link {{ 'active' if page_id == 'stats' }}">Stats</a>
+            </li>
+            <li class="nav-item">
+                <a href="https://github.com/RaidMax/IW4MAdmin-Master" target="_blank" class="nav-link">Source</a>
+            </li>
+        </ul>
+        <div class=" d-none d-md-flex ml-auto">
+            <div class="btn oi btn-square btn-action mr-10" data-glyph="moon" onclick="halfmoon.toggleDarkMode()"
+                 title="Toggle display mode"></div>
+        </div>
+        <!-- mobile -->
+        <div class="navbar-content d-md-none ml-auto">
+            <div class="btn oi btn-square btn-action mr-10" data-glyph="moon" onclick="halfmoon.toggleDarkMode()"></div>
+            <div class="dropdown with-arrow">
+                <button class="btn btn-primary" data-toggle="dropdown" type="button" id="navbar-dropdown-toggle-btn-1">
+                    Menu
+                    <i class="fa fa-angle-down" aria-hidden="true"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right w-200" aria-labelledby="navbar-dropdown-toggle-btn-1">
+                    <a href="/" class="dropdown-item">Graph</a>
+                    <a href="/servers" class="dropdown-item">Servers</a>
+                    <a href="/stats" class="dropdown-item">Stats</a>
+                    <a href="https://github.com/RaidMax/IW4MAdmin-Master" target="_blank" class="dropdown-item">Source</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container content-wrapper">
+        {% block content %}{% endblock %}
+        <div class="content d-flex">
+            <div class="ml-auto badge text-muted font-weight-light font-size-12">ForeverNone</div>
+        </div>
+    </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/js/halfmoon.min.js"></script>
+{% block additional_scripts %}{% endblock %}
+</body>
+
+</html>

@@ -20,7 +20,8 @@ def home(start):
                            client_count=_history_graph[0]['client_count'],
                            server_count=_history_graph[0]['server_count'],
                            next_zoom_point=_history_graph[0]['next_zoom_point'],
-                           previous_zoom_point=_history_graph[0]['previous_zoom_point'])
+                           previous_zoom_point=_history_graph[0]['previous_zoom_point'],
+                           page_id='graph')
 
 
 @app.route('/servers')
@@ -33,7 +34,8 @@ def servers():
             server_dict[server_group.game].append(server_group)
     return render_template('serverlist.html',
                            title='Server List',
-                           games=server_dict)
+                           games=server_dict,
+                           page_id='servers')
 
 
 def count_by_key(source_key, source, dest_key, dest, sort_by='count', count_by='count', limit=9, metric_name='Metric',
@@ -75,7 +77,7 @@ def stats():
 
     server_list = [instance.servers for instance in ctx.instance_list.values()]
     flat_servers = [item for sublist in server_list for item in sublist]
-    count_by_key('version', ctx.instance_list.values(), 'Instances By Version', stats_dict, metric_name='Version', metric_count='Instance Count')
+    count_by_key('version', ctx.instance_list.values(), 'Instances By Version', stats_dict, metric_name='Version', metric_count='Instances')
     count_by_key('game', flat_servers, 'Servers By Game', stats_dict, metric_name='Game', metric_count='Servers')
     count_by_key('game', flat_servers, 'Players By Game', stats_dict, count_by='clientnum', metric_name='Game', metric_count='Players')
     count_by_key('gametype', flat_servers, 'Servers By Game Type', stats_dict, metric_name='Game Type', metric_count='Servers')
@@ -88,7 +90,7 @@ def stats():
 
     count_by_key('ip_address', ctx.instance_list.values(), 'Uptime By Instance', stats_dict, count_by='uptime', metric_name='IP Address', metric_count='Uptime', formatter=uptime_formatter)
 
-    return render_template('stats.html', title='Stats', stats=stats_dict)
+    return render_template('stats.html', title='Stats', stats=stats_dict, page_id='stats')
 
 
 @app.route('/plugin_subscriptions')

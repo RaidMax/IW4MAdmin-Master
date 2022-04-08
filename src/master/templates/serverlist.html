@@ -1,126 +1,97 @@
-{% extends "layout.html" %}
-
+{% extends "base.html" %}
+{% block meta_title %}Servers{% endblock %}
+{% block meta_description %}List of monitored games and servers{% endblock %}
 {% block content %}
-<div class="modal modal-dark" id="serverModalCenter" tabindex="-1" role="dialog"
-     aria-labelledby="serverModalCenterTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="serverModalTitle">Modal title</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="h5" id="server_socket"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-12">
-        <nav>
-            <div class="nav nav-tabs" id="server_game_tabs" role="tablist">
-                {% for game in games %}
-                <a class="nav-item nav-link {{'active' if loop.first else ''}} rounded-0 col-12 col-lg-auto" id="{{game}}_servers_tab"
-                   data-toggle="tab" href="#{{game}}_servers" role="tab" aria-controls="{{game}}_servers"
-                   aria-selected="{{'true' if loop.first else 'false' }}">
-                    <div class="text-center font-weight-bold">{{game}}</div>
-                    <div class="text-center">{{games[game]|sum(attribute='clientnum')}} players &ndash; {{games[game]|length}} servers</div>
-                </a>
+<div class="content">
+    {% for game in games %}
+    <button class="btn game {{'btn-primary active' if loop.first else ''}} mb-5" data-game="{{game}}">{{game}}</button>
+    {% endfor %}
+
+    <div class="tab-content" id="server_game_tabs_content">
+        {% for game, servers in games.items() %}
+
+        <div class="game-server-panel {{'' if loop.first else 'd-none'}}" id="{{game}}_servers">
+            <div class="badge-group mt-10 mb-10" role="group" aria-label="...">
+                <span class="badge badge-primary">{{servers|sum(attribute='clientnum')}}</span>
+                <span class="badge bg-dark text-white">players</span>
+            </div>
+            <div class="badge-group mt-10 mb-10" role="group" aria-label="...">
+                <span class="badge badge-secondary">{{servers|length}}</span>
+                <span class="badge bg-dark text-white">servers</span>
+            </div>
+            <table class="table table-striped table-hover table-responsive table-outer-bordered">
+                <thead>
+                <tr>
+                    <th>Server Name</th>
+                    <th>Map Name</th>
+                    <th>Players</th>
+                    <th>Mode</th>
+                    <th class="text-center d-none d-lg-table-cell">Webfront</th>
+                    <th class="text-center d-none d-lg-table-cell">Connect</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for server in servers|sort(attribute='clientnum', reverse = True) %}
+
+                <tr class="server-row" data-ip="{{server.ip}}" data-port="{{server.port}}">
+                    <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}"
+                        class="server-hostname text-break">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
+                    </td>
+                    <td data-map="{{server.map}}" class="server-map text-break">{{server.map}}</td>
+                    <td data-clientnum="{{server.clientnum}}" data-maxclientnum="{{server.maxclientnum}}"
+                        class="server-clientnum">
+                        {{server.clientnum}}/{{server.maxclientnum}}
+                    </td>
+                    <td data-gametype="{{server.gametype}}" class="server-gametype text-break">{{server.gametype}}
+                    </td>
+                    <td class="text-center d-none d-lg-table-cell">
+                        {% if server.instance.webfront_url %}
+                        <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
+                        {% endif %}
+                    </td>
+                    <td class="text-center d-none d-lg-table-cell" data-toggle="modal"
+                        data-target="#serverModalCenter">
+                        <a href="#serverModalCenter" class="connect-button"><span class="oi oi-play-circle"></span></a>
+                    </td>
+                </tr>
+
                 {% endfor %}
-            </div>
-        </nav>
-        <div class="tab-content" id="server_game_tabs_content">
-            {% for game, servers in games.items() %}
 
-            <div class="tab-pane {{'show active' if loop.first else ''}}" id="{{game}}_servers" role="tabpanel"
-                 aria-labelledby="{{game}}_servers_tab">
-
-                <table class="table table-dark table-striped table-hover ">
-                    <thead>
-                    <tr>
-                        <th>Server Name</th>
-                        <th>Map Name</th>
-                        <th>Players</th>
-                        <th>Mode</th>
-                        <th class="text-center d-none d-lg-table-cell">Webfront</th>
-                        <th class="text-center d-none d-lg-table-cell">Connect</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-
-                    {% for server in servers|sort(attribute='clientnum', reverse = True) %}
-
-                    <tr class="server-row" data-ip="{{server.ip}}" data-port="{{server.port}}">
-                        <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}"
-                            class="server-hostname text-break">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
-                        </td>
-                        <td data-map="{{server.map}}" class="server-map text-break">{{server.map}}</td>
-                        <td data-clientnum="{{server.clientnum}}" data-maxclientnum="{{server.maxclientnum}}"
-                            class="server-clientnum">
-                            {{server.clientnum}}/{{server.maxclientnum}}
-                        </td>
-                        <td data-gametype="{{server.gametype}}" class="server-gametype text-break">{{server.gametype}}</td>
-                        <td class="text-center d-none d-lg-table-cell">
-                            {% if server.instance.webfront_url %}
-                            <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
-                            {% endif %}
-                        </td>
-                        <td class="text-center d-none d-lg-table-cell" data-toggle="modal" data-target="#serverModalCenter">
-                            <a href="#" class="connect-button"><span class="oi oi-play-circle"></span></a>
-                        </td>
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-                </table>
-            </div>
-            {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="w-100 small text-right  text-muted">
-            <span>Developed by RaidMax</span><br/>
-            <span>PRERELEASE</span>
-        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block additional_scripts %}
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
 <script>
+
     $(document).ready(() => {
         $('.connect-button').off('click');
         $('.connect-button').on('click', function (e) {
             const parent = $(this).parents('.server-row');
-            $('#serverModalTitle').text($(parent).find('.server-hostname').text());
-            $('#server_socket').text(`connect ${$(parent).data('ip')}:${$(parent).data('port')}`);
+            const hostname = parent.find('.server-hostname').data('hostname');
+            const map = parent.find('.server-map').data('map');
+            $('#modalTitle').html(`${hostname} <div class="text-muted">${map}</div>`);
+            $('#modalContent').html(`<code class="code">connect ${$(parent).data('ip')}:${$(parent).data('port')}</code>`);
+        });
+
+        $('.game').click((e) => {
+            $('.game').removeClass('btn-primary active');
+            $(e.target).addClass('btn-primary active');
+            const game = $(e.target).data('game');
+            $('.game-server-panel').addClass('d-none').removeClass('d-block');;
+            $( `#${game}_servers` ).removeClass('d-none').addClass('d-block');
         });
     });
+
 </script>
-{% endblock %}
 
-{% block styles %}
-<style>
-    .server-row {
-        cursor: pointer;
-    }
-
-    .modal-content, .nav-item {
-        background-color: #212529;
-        color: #fff;
-    }
-
-    .modal-header, .modal-footer {
-        border-color: #32383e !important;
-    }
-
-    .modal-dark button.close, a.nav-link {
-        color: #fff;
-    }
-</style>
 {% endblock %}

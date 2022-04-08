@@ -1,16 +1,19 @@
-{% extends "layout.html" %}
-
+{% extends "base.html" %}
+{% block meta_title %}Statistics{% endblock %}
+{% block meta_description %}Statistics for IW4MAdmin instances{% endblock %}
 {% block content %}
-<div class="row">
+<div class="content row">
     {% for key, value in stats.items() %}
-    <div class="col-12 col-md-6 col-lg-4 col-xl-3 d-flex flex-column align-items-stretch">
-        <div class="text-center bg-light font-weight-bold">{{key}}</div>
-        <table class="table table-dark table-sm border">
+    <div class="col-sm {{'' if loop.last else 'mb-20'}}">
+        <table class="table table-responsive table-outer-bordered">
             <thead>
+            <tr>
+                <th colspan="3" class="text-center">{{key}}</th>
+            </tr>
             <tr>
                 <th>{{value[0][1]['metric_name']}}</th>
                 <th>{{value[0][1]['metric_count']}}</th>
-                <th>Percent</th>
+                <th class="text-right">Percent</th>
             </tr>
             </thead>
             <tbody>
@@ -18,7 +21,7 @@
             <tr>
                 <td>{{item[0]}}</td>
                 <td>{{item[1]['count']}}</td>
-                <td>{{item[1]['percent']}}%</td>
+                <td class="text-right">{{item[1]['percent']}}%</td>
             </tr>
             {% endfor %}
             </tbody>
