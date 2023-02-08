@@ -5,7 +5,7 @@ cffi==1.14.3
 chardet==3.0.4
 chargebee==2.7.7
 click==7.1.2
-cryptography==3.3.2
+cryptography==39.0.1
 firebase==3.0.1
 Flask==1.1.2
 Flask-JWT-Extended==3.24.1
