@@ -2,6 +2,7 @@ from typing import Iterable
 
 from ecommerce.integrations.data.meta_data import MetaData
 from ecommerce.integrations.data.plan_data import PlanData
+import random
 
 
 class PlanLogic:
@@ -15,6 +16,7 @@ class PlanLogic:
         :return:
         """
         plans = self._customer_data.get_all_plans()
+        random.shuffle(plans)
         plans_meta = self._external_meta_data.get('plans', '')
         return [{
             'name': plan.name,

@@ -1,3 +1,5 @@
+import logging
+
 from flask_restful import Resource
 from pygal.style import Style
 from .. import ctx
@@ -7,7 +9,10 @@ from math import ceil
 
 
 class HistoryGraph(Resource):
-    def get(self, start_index):
+    def __init__(self):
+        self._logger = logging.getLogger(__name__)
+
+    def get(self, start_index=0):
         try:
             custom_style = Style(background='transparent',
                                  plot_background='transparent',
@@ -56,4 +61,5 @@ class HistoryGraph(Resource):
                     'previous_zoom_point': previous_zoom_point
                     }, 200
         except Exception as e:
-            return {'message': str(e)}, 500
+            self._logger.exception('Error generating history graph')
+            return {'message': 'Error generating history graph'}, 500

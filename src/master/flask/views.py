@@ -96,5 +96,5 @@ def stats():
 @app.route('/plugin_subscriptions')
 def hello():
     return redirect(
-        f'http://api.raidmax.org/plugin_subscriptions?subscription_id={request.args.get("subscription_id")}&instance_id={request.args.get("instance_id")}',
+        f'https://store.raidmax.org/plugin_subscriptions?subscription_id={request.args.get("subscription_id")}&instance_id={request.args.get("instance_id")}',
         code=302)

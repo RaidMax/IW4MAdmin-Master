@@ -1,5 +1,5 @@
 import logging
-from collections import Iterable
+from collections.abc import Iterable
 
 import chargebee
 from box import BoxList

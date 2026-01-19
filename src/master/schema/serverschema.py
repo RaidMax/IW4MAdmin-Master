@@ -40,9 +40,10 @@ class ServerSchema(Schema):
     )
     gametype = fields.String(
         required=False,
-        validate=validate.Length(min=1, max=16, error='invalid gametype'),
-        missing="Unknown"
+        validate=validate.Length(min=0, max=16, error='invalid gametype'),
+        load_default="Unknown"
     )
+    resolved_external_ip_address = fields.Str(required=False, load_default=None)
 
     @post_load
     def make_instance(self, data, **kwargs):

@@ -21,6 +21,7 @@ class CustomerLogic:
         :param instance_id: admin instance identifier
         :return:
         """
+		
         customer_subscriptions = self._customer_data.get_customer_content_urls_by_email(subscription_id)
         for item in customer_subscriptions:
             try:

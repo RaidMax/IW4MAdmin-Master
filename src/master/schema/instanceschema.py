@@ -7,12 +7,12 @@ class InstanceSchema(Schema):
     id = fields.String(
         required=True
     )
-    version = fields.Inferred(
+    version = fields.Raw(
     )
     servers = fields.Nested(
         ServerSchema,
         many=True,
-        validate=validate.Length(min=0, max=64, error='invalid server count')
+        validate=validate.Length(min=0, max=256, error='invalid server count')
     )
     uptime = fields.Int(
         required=True,
@@ -22,7 +22,7 @@ class InstanceSchema(Schema):
         required=False
     )
     ip_address = fields.String(required=False)
-    webfront_url = fields.String(required=False, missing=None)
+    webfront_url = fields.String(required=False, load_default=None)
 
     @post_load
     def make_instance(self, data, **kwargs):

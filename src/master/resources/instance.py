@@ -25,7 +25,9 @@ class Instance(Resource):
     # @jwt_required
     def put(self, id):
         try:
-            remote_ip = request.remote_addr
+            #remote_ip = request.headers.get('X-Real-IP')
+            remote_ip = request.headers.get('CF-Connecting-IP') or request.headers.get('X-Real-IP') or request.remote_addr
+
             for index in range(0, len(request.json['servers'])):
                 server = request.json['servers'][index]
 
@@ -35,7 +37,7 @@ class Instance(Resource):
                 except (AddrFormatError, KeyError):
                     pass
 
-                if 'ip' not in server or parsed_ip is None or parsed_ip.is_private() or parsed_ip.is_loopback():
+                if 'ip' not in server or (parsed_ip is not None and (parsed_ip.is_private() or parsed_ip.is_loopback() or server['ip'] == '0.0.0.0')):
                     request.json['servers'][index]['ip'] = remote_ip
                 if 'version' not in server:
                     request.json['servers'][index]['version'] = 'Unknown'
@@ -48,10 +50,11 @@ class Instance(Resource):
         ctx.update_instance(instance)
         return {'message': 'instance updated successfully'}, 200
 
-    @jwt_required
+    @jwt_required()
     def post(self):
         try:
-            remote_ip = request.remote_addr
+            #remote_ip = request.headers.get('X-Real-IP')
+            remote_ip = request.headers.get('CF-Connecting-IP') or request.headers.get('X-Real-IP') or request.remote_addr
             for index in range(0, len(request.json['servers'])):
                 server = request.json['servers'][index]
 
@@ -61,7 +64,7 @@ class Instance(Resource):
                 except (AddrFormatError, KeyError):
                     pass
 
-                if 'ip' not in server or parsed_ip is None or parsed_ip.is_private() or parsed_ip.is_loopback():
+                if 'ip' not in server or (parsed_ip is not None and (parsed_ip.is_private() or parsed_ip.is_loopback() or server['ip'] == '0.0.0.0')):
                     request.json['servers'][index]['ip'] = remote_ip
                 if 'version' not in server:
                     request.json['servers'][index]['version'] = 'Unknown'

@@ -19,7 +19,7 @@ class InstanceModel(object):
         self.uptime = uptime
         self.servers = servers
         self.last_heartbeat = int(time.time())
-        self.ip_address = ip_address
+        self.ip_address = re.sub('(:[0-9]+)|https?://', '', self.__check_if_non_public(webfront_url, ip_address))
         self.webfront_url = self.__check_if_non_public(webfront_url, ip_address)
 
     @property
@@ -36,7 +36,7 @@ class InstanceModel(object):
         match = re.match(url_regex, url)
 
         if not match or not match.groups():
-            return None
+            return ''
 
         address = match.groups()[1]
         port = match.groups()[2]

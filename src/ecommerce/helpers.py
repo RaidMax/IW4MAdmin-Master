@@ -1,3 +1,4 @@
+CONTENT_TYPE_UNKNOWN = -1
 CONTENT_TYPE_BINARY = 0
 CONTENT_TYPE_SCRIPT = 1
 
@@ -7,3 +8,4 @@ def determine_content_type(content_name: str) -> int:
         return CONTENT_TYPE_BINARY
     if content_name.lower().endswith('.js'):
         return CONTENT_TYPE_SCRIPT
+    return CONTENT_TYPE_UNKNOWN

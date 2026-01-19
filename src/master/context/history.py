@@ -39,7 +39,7 @@ class History:
             current_time = time.time()
             last_history_time = self.instance_history[-1]['time']
             while last_history_time < current_time:
-                self.add_client_history(0)
-                self.add_server_history(0)
-                self.add_instance_history(0)
                 last_history_time = last_history_time + History.sample_rate
+                self.add_client_history(0, last_history_time)
+                self.add_server_history(0, last_history_time)
+                self.add_instance_history(0, last_history_time)

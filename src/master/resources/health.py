@@ -1,9 +1,9 @@
 from flask_restful import Resource
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Health(Resource):
     def get(self):
         return {
-            'time': datetime.utcnow().isoformat()
+            'time': datetime.now(timezone.utc).isoformat()
         }

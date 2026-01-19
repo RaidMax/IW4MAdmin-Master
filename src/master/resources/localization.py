@@ -2,6 +2,7 @@ from flask_restful import Resource
 import urllib.request
 import csv
 from io import StringIO
+import unicodedata
 
 
 class Localization(Resource):
