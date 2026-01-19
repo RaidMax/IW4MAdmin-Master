@@ -1,0 +1,130 @@
+"""
+Configuration module for IW4MAdmin Master API.
+Loads settings from config/master_config.json with environment variable overrides.
+"""
+
+import json
+import os
+from typing import Any
+
+
+class Config:
+    _instance = None
+    _config = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._load_config()
+        return cls._instance
+
+    def _load_config(self):
+        config_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'config',
+            'master_config.json'
+        )
+        
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                self._config = json.load(f)
+        else:
+            self._config = {}
+
+        # Environment variable overrides (for container deployments)
+        if os.environ.get('DATABASE_URL'):
+            self._parse_database_url(os.environ['DATABASE_URL'])
+        if os.environ.get('IW4MADMIN_AUTH_KEY'):
+            self._config['jwt_secret_key'] = os.environ['IW4MADMIN_AUTH_KEY']
+
+    def _parse_database_url(self, url: str):
+        """Parse DATABASE_URL format: postgresql://user:password@host:port/dbname"""
+        import urllib.parse
+        parsed = urllib.parse.urlparse(url)
+        self._config['database'] = {
+            'host': parsed.hostname or 'localhost',
+            'port': parsed.port or 5432,
+            'name': parsed.path.lstrip('/') if parsed.path else 'iw4madmin_master',
+            'user': parsed.username or 'postgres',
+            'password': parsed.password or ''
+        }
+
+    def get(self, *keys, default: Any = None) -> Any:
+        """Get nested config value. Example: config.get('database', 'host')"""
+        value = self._config
+        for key in keys:
+            if isinstance(value, dict):
+                value = value.get(key)
+            else:
+                return default
+            if value is None:
+                return default
+        return value
+
+    @property
+    def database_host(self) -> str:
+        return self.get('database', 'host', default='localhost')
+
+    @property
+    def database_port(self) -> int:
+        return self.get('database', 'port', default=5432)
+
+    @property
+    def database_name(self) -> str:
+        return self.get('database', 'name', default='iw4madmin_master')
+
+    @property
+    def database_user(self) -> str:
+        return self.get('database', 'user', default='postgres')
+
+    @property
+    def database_password(self) -> str:
+        return self.get('database', 'password', default='')
+
+    @property
+    def jwt_secret_key(self) -> str:
+        return self.get('jwt_secret_key', default='change-this-in-production')
+
+    @property
+    def rate_limit_enabled(self) -> bool:
+        return self.get('rate_limiting', 'enabled', default=True)
+
+    @property
+    def rate_limit_default(self) -> str:
+        return self.get('rate_limiting', 'default_limit', default='100/minute')
+
+    @property
+    def rate_limit_write(self) -> str:
+        return self.get('rate_limiting', 'write_limit', default='30/minute')
+
+    @property
+    def localization_url(self) -> str:
+        return self.get('localization', 'google_sheets_url', default='')
+
+    @property
+    def localization_cache_ttl(self) -> int:
+        return self.get('localization', 'cache_ttl_seconds', default=300)
+
+    @property
+    def log_level(self) -> str:
+        return self.get('logging', 'level', default='INFO')
+
+    @property
+    def log_json_format(self) -> bool:
+        return self.get('logging', 'json_format', default=True)
+
+    @property
+    def log_file(self) -> str:
+        return self.get('logging', 'file', default='master.log')
+
+    @property
+    def history_sample_rate(self) -> int:
+        return self.get('history', 'sample_rate_seconds', default=30)
+
+    @property
+    def history_max_days(self) -> int:
+        return self.get('history', 'max_history_days', default=7)
+
+
+# Singleton instance
+config = Config()

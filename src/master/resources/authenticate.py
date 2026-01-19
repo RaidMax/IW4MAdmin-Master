@@ -7,11 +7,17 @@ from .. import ctx
 
 class Authenticate(Resource):
     def post(self):
-        instance_id = request.json['id']
-        # todo: see why this is failing
-        # if ctx.get_token(instance_id) is not False:
-        #    return { 'message' : 'that id already has a token'}, 401
-        # else:
+        if not request.is_json:
+            return {'message': 'Request body must be JSON'}, 400
+        
+        data = request.get_json(silent=True)
+        if not data:
+            return {'message': 'Invalid JSON body'}, 400
+        
+        instance_id = data.get('id')
+        if not instance_id:
+            return {'message': 'id is required'}, 400
+        
         expires = timedelta(days=30)
         token = create_access_token(instance_id, expires_delta=expires)
         ctx.add_token(instance_id, token)

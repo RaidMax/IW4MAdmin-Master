@@ -1,16 +1,28 @@
+"""
+Instance resource for managing IW4MAdmin instances and their servers.
+"""
+
 import logging
 
-from flask_restful import Resource
 from flask import request
+from flask_restful import Resource
 from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
-from ..schema.instanceschema import InstanceSchema
-from .. import ctx
 from netaddr import IPAddress, AddrFormatError
+
+from .. import ctx, limiter
+from ..config import config
+from ..database import db
+from ..schema.instanceschema import InstanceSchema
+
+logger = logging.getLogger(__name__)
 
 
 class Instance(Resource):
+    decorators = [limiter.limit(config.rate_limit_default)]
+
     def get(self, id=None):
+        """Get instance(s) - all or by ID."""
         if id is None:
             schema = InstanceSchema(many=True)
             instances = schema.dump(ctx.get_instances())
@@ -22,57 +34,145 @@ class Instance(Resource):
             except KeyError:
                 return {'message': 'instance not found'}, 404
 
-    # @jwt_required
-    def put(self, id):
-        try:
-            #remote_ip = request.headers.get('X-Real-IP')
-            remote_ip = request.headers.get('CF-Connecting-IP') or request.headers.get('X-Real-IP') or request.remote_addr
+    def _get_remote_ip(self) -> str:
+        """Get the real client IP from headers or connection."""
+        return (
+            request.headers.get('CF-Connecting-IP') or
+            request.headers.get('X-Real-IP') or
+            request.remote_addr
+        )
 
-            for index in range(0, len(request.json['servers'])):
-                server = request.json['servers'][index]
-
-                parsed_ip = None
-                try:
+    def _process_servers(self, data: dict, remote_ip: str) -> None:
+        """Process and normalize server data."""
+        servers = data.get('servers', [])
+        for server in servers:
+            # Handle IP address
+            parsed_ip = None
+            try:
+                if 'ip' in server:
                     parsed_ip = IPAddress(server['ip'])
-                except (AddrFormatError, KeyError):
-                    pass
+            except (AddrFormatError, KeyError):
+                pass
 
-                if 'ip' not in server or (parsed_ip is not None and (parsed_ip.is_private() or parsed_ip.is_loopback() or server['ip'] == '0.0.0.0')):
-                    request.json['servers'][index]['ip'] = remote_ip
-                if 'version' not in server:
-                    request.json['servers'][index]['version'] = 'Unknown'
-                request.json['servers'][index]['port'] = request.json['servers'][index]['port'] & 0xffff
-            request.json['ip_address'] = remote_ip
-            instance = InstanceSchema().load(request.json)
+            if 'ip' not in server or (parsed_ip is not None and (
+                parsed_ip.is_private() or parsed_ip.is_loopback() or server['ip'] == '0.0.0.0'
+            )):
+                server['ip'] = remote_ip
+
+            # Default version if not provided
+            if 'version' not in server:
+                server['version'] = 'Unknown'
+
+            # Mask port to valid range
+            if 'port' in server:
+                server['port'] = server['port'] & 0xffff
+
+    @limiter.limit(config.rate_limit_write)
+    def put(self, id):
+        """Update an existing instance (heartbeat)."""
+        if not request.is_json:
+            return {'message': 'Request body must be JSON'}, 400
+
+        try:
+            data = request.get_json(silent=True)
+            if not data:
+                return {'message': 'Invalid JSON body'}, 400
+
+            remote_ip = self._get_remote_ip()
+            self._process_servers(data, remote_ip)
+            data['ip_address'] = remote_ip
+
+            instance = InstanceSchema().load(data)
         except ValidationError as err:
-            logging.warning(f'could not validate instance: {str(request.json)}', exc_info=err)
+            logger.warning(f'Instance validation failed: {err.messages}')
             return {'message': err.messages}, 400
+        except Exception as e:
+            logger.error(f'Error processing instance update: {e}')
+            return {'message': 'Invalid request data'}, 400
+
         ctx.update_instance(instance)
+
+        # Persist to database if available
+        try:
+            db.upsert_instance(
+                instance_id=instance.id,
+                version=instance.version,
+                uptime=instance.uptime,
+                ip_address=instance.ip_address,
+                webfront_url=instance.webfront_url
+            )
+            for server in instance.servers:
+                db.upsert_server(
+                    server_id=server.id,
+                    instance_id=instance.id,
+                    ip=server.ip,
+                    port=server.port,
+                    version=server.version,
+                    game=server.game,
+                    hostname=server.hostname,
+                    clientnum=server.clientnum,
+                    maxclientnum=server.maxclientnum,
+                    map_name=server.map,
+                    gametype=server.gametype,
+                    resolved_ip=server.resolved_external_ip_address
+                )
+        except Exception as e:
+            logger.debug(f'Database persistence skipped: {e}')
+
         return {'message': 'instance updated successfully'}, 200
 
     @jwt_required()
+    @limiter.limit(config.rate_limit_write)
     def post(self):
+        """Add a new instance (requires JWT auth)."""
+        if not request.is_json:
+            return {'message': 'Request body must be JSON'}, 400
+
         try:
-            #remote_ip = request.headers.get('X-Real-IP')
-            remote_ip = request.headers.get('CF-Connecting-IP') or request.headers.get('X-Real-IP') or request.remote_addr
-            for index in range(0, len(request.json['servers'])):
-                server = request.json['servers'][index]
+            data = request.get_json(silent=True)
+            if not data:
+                return {'message': 'Invalid JSON body'}, 400
 
-                parsed_ip = None
-                try:
-                    parsed_ip = IPAddress(server['ip'])
-                except (AddrFormatError, KeyError):
-                    pass
+            remote_ip = self._get_remote_ip()
+            self._process_servers(data, remote_ip)
+            data['ip_address'] = remote_ip
 
-                if 'ip' not in server or (parsed_ip is not None and (parsed_ip.is_private() or parsed_ip.is_loopback() or server['ip'] == '0.0.0.0')):
-                    request.json['servers'][index]['ip'] = remote_ip
-                if 'version' not in server:
-                    request.json['servers'][index]['version'] = 'Unknown'
-                request.json['servers'][index]['port'] = request.json['servers'][index]['port'] & 0xffff
-            request.json['ip_address'] = remote_ip
-            instance = InstanceSchema().load(request.json)
+            instance = InstanceSchema().load(data)
         except ValidationError as err:
-            logging.warning(f'could not validate instance: {str(request.json)}', exc_info=err)
+            logger.warning(f'Instance validation failed: {err.messages}')
             return {'message': err.messages}, 400
+        except Exception as e:
+            logger.error(f'Error processing new instance: {e}')
+            return {'message': 'Invalid request data'}, 400
+
         ctx.add_instance(instance)
+
+        # Persist to database if available
+        try:
+            db.upsert_instance(
+                instance_id=instance.id,
+                version=instance.version,
+                uptime=instance.uptime,
+                ip_address=instance.ip_address,
+                webfront_url=instance.webfront_url
+            )
+            for server in instance.servers:
+                db.upsert_server(
+                    server_id=server.id,
+                    instance_id=instance.id,
+                    ip=server.ip,
+                    port=server.port,
+                    version=server.version,
+                    game=server.game,
+                    hostname=server.hostname,
+                    clientnum=server.clientnum,
+                    maxclientnum=server.maxclientnum,
+                    map_name=server.map,
+                    gametype=server.gametype,
+                    resolved_ip=server.resolved_external_ip_address
+                )
+        except Exception as e:
+            logger.debug(f'Database persistence skipped: {e}')
+
         return {'message': 'instance added successfully'}, 200
+

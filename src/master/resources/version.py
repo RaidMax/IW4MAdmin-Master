@@ -1,43 +1,87 @@
-from flask_restful import Resource, reqparse
-from .. import app
+"""
+Version resource for IW4MAdmin client version management.
+"""
+
 import json
+import logging
+import os
+
+from flask import request
+from flask_restful import Resource
+from marshmallow import ValidationError
+
+from .. import app
+from ..schema.versionschema import VersionUpdateSchema
+
+logger = logging.getLogger(__name__)
 
 
 class Version(Resource):
     def __init__(self):
         self.config_folder = 'config'
         self.master_file_name = 'master'
+        self._schema = VersionUpdateSchema()
 
-    def get(self, api_version=0):
-        with open('{0}/{1}.v{2}.json'.format(self.config_folder, self.master_file_name, api_version)) as config_file:
-            config = json.load(config_file)
-        return {
-                   'current-version-stable': config['current-version-stable'],
-                   'current-version-prerelease': config['current-version-prerelease']
-               }, 200
+    def get(self, api_version: int = 0):
+        """Get current version information."""
+        config_path = os.path.join(
+            self.config_folder,
+            f'{self.master_file_name}.v{api_version}.json'
+        )
+        
+        try:
+            with open(config_path) as config_file:
+                config = json.load(config_file)
+            return {
+                'current-version-stable': config.get('current-version-stable'),
+                'current-version-prerelease': config.get('current-version-prerelease')
+            }, 200
+        except FileNotFoundError:
+            logger.warning(f"Version config not found: {config_path}")
+            return {'message': f'Version {api_version} not found'}, 404
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in version config: {e}")
+            return {'message': 'Configuration error'}, 500
 
-    # @jwt_required
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('current-version-stable')
-        parser.add_argument('current-version-prerelease')
-        parser.add_argument('jwt-secret', help='jwt-secret is required', required=True)
-        args = parser.parse_args()
+        """Update version information (requires jwt-secret)."""
+        if not request.is_json:
+            return {'message': 'Request body must be JSON'}, 400
 
-        with open('{0}/{1}.v1.json'.format(self.config_folder, self.master_file_name)) as config_file:
-            config = json.load(config_file)
+        try:
+            data = self._schema.load(request.get_json())
+        except ValidationError as err:
+            return {'message': err.messages}, 400
 
-        if args['current-version-stable'] is not None:
-            config['current-version-stable'] = args['current-version-stable']
+        config_path = os.path.join(
+            self.config_folder,
+            f'{self.master_file_name}.v1.json'
+        )
 
-        if args['current-version-prerelease'] is not None:
-            config['current-version-prerelease'] = args['current-version-prerelease']
+        try:
+            with open(config_path) as config_file:
+                config = json.load(config_file)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to load version config: {e}")
+            return {'message': 'Configuration error'}, 500
 
-        if args['jwt-secret'] == app.config['JWT_SECRET_KEY']:
-            with open('{0}/{1}.v1.json'.format(self.config_folder, self.master_file_name), 'w') as out_json:
-                json.dump(config, out_json, indent=4)
+        if data.get('current_version_stable'):
+            config['current-version-stable'] = data['current_version_stable']
+        if data.get('current_version_prerelease'):
+            config['current-version-prerelease'] = data['current_version_prerelease']
 
-            return {'message': 'stable is {0}, prerelease is {1}'.format(config['current-version-stable'],
-                                                                         config['current-version-prerelease'])}
+        if data['jwt_secret'] == app.config['JWT_SECRET_KEY']:
+            try:
+                with open(config_path, 'w') as out_json:
+                    json.dump(config, out_json, indent=4)
+                logger.info(f"Version updated: stable={config.get('current-version-stable')}, prerelease={config.get('current-version-prerelease')}")
+                return {
+                    'message': f"stable is {config.get('current-version-stable')}, prerelease is {config.get('current-version-prerelease')}"
+                }, 200
+            except IOError as e:
+                logger.error(f"Failed to write version config: {e}")
+                return {'message': 'Failed to save configuration'}, 500
         else:
+            logger.warning("Invalid jwt-secret in version update request")
             return {'message': 'invalid jwt secret'}, 401
+
