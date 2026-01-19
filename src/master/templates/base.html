@@ -17,6 +17,8 @@
     <!-- Halfmoon UI 2.0.2 -->
     <link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.2/css/halfmoon.min.css" rel="stylesheet"
         crossorigin="anonymous">
+    <!-- Bootstrap 5 JS for navbar toggle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <!-- Phosphor Icons -->
     <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
@@ -41,67 +43,47 @@
         </div>
     </div>
 
-    <div class="page-wrapper with-navbar">
-        <div class="sticky-alerts"></div>
-        <nav class="navbar navbar-expand-md">
-            <div class="container">
-                <a href="/" class="navbar-brand">
-                    <picture class="mt-5">
-                        <source class="img-fluid rounded" type="image/webp"
-                            srcset="{{ url_for('static', filename='image/brand.webp') }}">
-                        <img src="{{ url_for('static', filename='image/brand.png') }}" class="img-fluid rounded">
-                    </picture>
-                </a>
-                <!-- desktop -->
-                <ul class="navbar-nav d-none d-md-flex ms-0">
+    <nav class="navbar navbar-expand-md bg-body-tertiary sticky-top">
+        <div class="container">
+            <a href="/" class="navbar-brand">
+                <picture>
+                    <source class="img-fluid rounded" type="image/webp"
+                        srcset="{{ url_for('static', filename='image/brand.webp') }}">
+                    <img src="{{ url_for('static', filename='image/brand.png') }}" class="img-fluid rounded"
+                        alt="IW4MAdmin" style="max-height: 40px;">
+                </picture>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-md-0">
                     <li class="nav-item">
-                        <a href="/" class="nav-link {{ 'active' if page_id == 'graph' }}">Graph</a>
+                        <a href="/" class="nav-link {{ 'active' if page_id == 'graph' }}">Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a href="/servers" class="nav-link {{ 'active' if page_id == 'servers' }}">Servers</a>
                     </li>
                     <li class="nav-item">
-                        <a href="/stats" class="nav-link {{ 'active' if page_id == 'stats' }}">Stats</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="https://github.com/RaidMax/IW4MAdmin-Master" target="_blank"
-                            class="nav-link">Source</a>
+                        <a href="https://github.com/RaidMax/IW4MAdmin-Master" target="_blank" class="nav-link">
+                            <i class="ph ph-github-logo me-1"></i>Source
+                        </a>
                     </li>
                 </ul>
-                <div class="d-none d-md-flex ms-auto">
-                    <button class="btn btn-square btn-action me-2" onclick="toggleDarkMode()"
-                        title="Toggle display mode">
+                <div class="d-flex">
+                    <button class="btn btn-outline-secondary" onclick="toggleDarkMode()" title="Toggle display mode">
                         <i class="ph ph-moon"></i>
                     </button>
                 </div>
-                <!-- mobile -->
-                <div class="navbar-content d-md-none ms-auto">
-                    <button class="btn btn-square btn-action me-2" onclick="toggleDarkMode()">
-                        <i class="ph ph-moon"></i>
-                    </button>
-                    <div class="dropdown with-arrow">
-                        <button class="btn btn-primary" data-toggle="dropdown" type="button"
-                            id="navbar-dropdown-toggle-btn-1">
-                            Menu
-                            <i class="ph ph-caret-down" aria-hidden="true"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end w-200"
-                            aria-labelledby="navbar-dropdown-toggle-btn-1">
-                            <a href="/" class="dropdown-item">Graph</a>
-                            <a href="/servers" class="dropdown-item">Servers</a>
-                            <a href="/stats" class="dropdown-item">Stats</a>
-                            <a href="https://github.com/RaidMax/IW4MAdmin-Master" target="_blank"
-                                class="dropdown-item">Source</a>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </nav>
-        <div class="container content-wrapper">
-            {% block content %}{% endblock %}
-            <div class="content d-flex">
-                <div class="ms-auto badge text-muted font-weight-light font-size-12">ForeverNone</div>
-            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        {% block content %}{% endblock %}
+        <div class="d-flex mt-4">
+            <div class="ms-auto badge text-muted">ForeverNone</div>
         </div>
     </div>
 

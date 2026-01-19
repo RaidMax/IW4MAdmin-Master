@@ -1,0 +1,324 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "type": "text",
+            "title": "",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 999,
+            "options": {
+                "mode": "html",
+                "content": "<style>\nhtml, body, .main-view, .dashboard-container, .grafana-app, .dashboard-scroll {\n  background-color: #1d2125 !important;\n  background: #1d2125 !important;\n}\n.grafana-app div[class*=\"-body\"] {\n  padding: 0 !important;\n}\n</style>"
+            },
+            "transparent": true
+        },
+        {
+            "type": "stat",
+            "title": "Total Players Online",
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT COALESCE(SUM(s.clientnum), 0) as value FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes'",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 50
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 200
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Active Servers",
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 8,
+                "y": 0
+            },
+            "id": 2,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT COUNT(*) as value FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes'",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 10
+                            },
+                            {
+                                "color": "green",
+                                "value": 25
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "piechart",
+            "title": "Servers by Game",
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 16,
+                "y": 0
+            },
+            "id": 3,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT s.game, COUNT(*) as count FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' GROUP BY s.game ORDER BY count DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "values": [
+                        "percent",
+                        "value"
+                    ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "table",
+            "title": "All Servers",
+            "gridPos": {
+                "h": 20,
+                "w": 24,
+                "x": 0,
+                "y": 4
+            },
+            "id": 4,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT s.game as \"Game\", s.hostname as \"Server Name\", s.map as \"Map\", s.gametype as \"Mode\", s.clientnum || '/' || s.maxclientnum as \"Players\", i.webfront_url as \"Webfront\", s.resolved_external_ip_address || ':' || s.port as \"Connect\" FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' ORDER BY s.game ASC, s.clientnum DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "footer": {
+                    "show": true,
+                    "countRows": true,
+                    "reducer": [
+                        "count"
+                    ]
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Webfront"
+                        },
+                        "properties": [
+                            {
+                                "id": "links",
+                                "value": [
+                                    {
+                                        "title": "Open Webfront",
+                                        "url": "${__value.text}",
+                                        "targetBlank": true
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-text"
+                            },
+                            {
+                                "id": "color",
+                                "value": {
+                                    "mode": "fixed",
+                                    "fixedColor": "blue"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Connect"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-text"
+                            },
+                            {
+                                "id": "color",
+                                "value": {
+                                    "mode": "fixed",
+                                    "fixedColor": "green"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "iw4madmin",
+        "servers"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {},
+                "hide": 2,
+                "includeAll": false,
+                "multi": false,
+                "name": "DS_POSTGRESQL",
+                "options": [],
+                "query": "postgres",
+                "refresh": 1,
+                "regex": "",
+                "type": "datasource"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "IW4MAdmin Server List",
+    "uid": "iw4madmin-servers",
+    "version": 1,
+    "weekStart": ""
+}

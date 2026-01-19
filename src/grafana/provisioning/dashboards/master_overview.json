@@ -21,6 +21,22 @@
     "liveNow": false,
     "panels": [
         {
+            "type": "text",
+            "title": "",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 999,
+            "options": {
+                "mode": "html",
+                "content": "<style>\nhtml, body, .main-view, .dashboard-container, .grafana-app, .dashboard-scroll {\n  background-color: #1d2125 !important;\n  background: #1d2125 !important;\n}\n.grafana-app div[class*=\"-body\"] {\n  padding: 0 !important;\n}\n</style>"
+            },
+            "transparent": true
+        },
+        {
             "type": "stat",
             "title": "Active Instances",
             "gridPos": {
@@ -282,12 +298,12 @@
                         "axisPlacement": "auto",
                         "barAlignment": 0,
                         "drawStyle": "line",
-                        "fillOpacity": 20,
+                        "fillOpacity": 35,
                         "gradientMode": "opacity",
                         "lineInterpolation": "smooth",
-                        "lineWidth": 2,
+                        "lineWidth": 3,
                         "pointSize": 5,
-                        "showPoints": "auto",
+                        "showPoints": "never",
                         "spanNulls": false,
                         "stacking": {
                             "group": "A",
@@ -340,12 +356,12 @@
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "drawStyle": "line",
-                        "fillOpacity": 10,
-                        "gradientMode": "none",
+                        "fillOpacity": 25,
+                        "gradientMode": "opacity",
                         "lineInterpolation": "smooth",
-                        "lineWidth": 2,
+                        "lineWidth": 3,
                         "pointSize": 5,
-                        "showPoints": "auto",
+                        "showPoints": "never",
                         "spanNulls": false,
                         "stacking": {
                             "group": "A",
@@ -378,11 +394,15 @@
             ],
             "options": {
                 "legend": {
-                    "displayMode": "list",
+                    "displayMode": "table",
                     "placement": "right",
-                    "showLegend": true
+                    "showLegend": true,
+                    "values": [
+                        "percent",
+                        "value"
+                    ]
                 },
-                "pieType": "pie",
+                "pieType": "donut",
                 "reduceOptions": {
                     "calcs": [
                         "lastNotNull"
@@ -425,7 +445,7 @@
                 }
             ],
             "options": {
-                "barRadius": 0.1,
+                "barRadius": 0.25,
                 "barWidth": 0.8,
                 "groupWidth": 0.7,
                 "legend": {
@@ -448,27 +468,273 @@
                     "color": {
                         "mode": "palette-classic"
                     },
+                    "custom": {
+                        "fillOpacity": 80,
+                        "gradientMode": "none"
+                    },
                     "unit": "none"
                 }
             }
         },
         {
-            "type": "table",
-            "title": "Active Servers",
+            "type": "piechart",
+            "title": "Instances by Version",
             "gridPos": {
                 "h": 8,
-                "w": 24,
+                "w": 8,
                 "x": 0,
-                "y": 20
+                "y": 28
             },
-            "id": 9,
+            "id": 10,
             "datasource": {
                 "type": "postgres",
                 "uid": "${DS_POSTGRESQL}"
             },
             "targets": [
                 {
-                    "rawSql": "SELECT s.hostname as \"Server Name\", s.game as \"Game\", s.map as \"Map\", s.gametype as \"Mode\", s.clientnum || '/' || s.maxclientnum as \"Players\", s.resolved_external_ip_address || ':' || s.port as \"Address\" FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' ORDER BY s.clientnum DESC",
+                    "rawSql": "SELECT version, COUNT(*) as count FROM instances WHERE last_heartbeat > NOW() - INTERVAL '5 minutes' GROUP BY version ORDER BY count DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "values": [
+                        "percent",
+                        "value"
+                    ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "piechart",
+            "title": "Players by Game",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 28
+            },
+            "id": 11,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT s.game, COALESCE(SUM(s.clientnum), 0) as players FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' GROUP BY s.game ORDER BY players DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "values": [
+                        "percent",
+                        "value"
+                    ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "piechart",
+            "title": "Servers by Game Type",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 28
+            },
+            "id": 12,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT s.gametype, COUNT(*) as count FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' GROUP BY s.gametype ORDER BY count DESC LIMIT 10",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "values": [
+                        "percent",
+                        "value"
+                    ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "barchart",
+            "title": "Top 10 Maps by Server Count",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 36
+            },
+            "id": 13,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT s.map as \"Map\", COUNT(*) as \"Servers\" FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' GROUP BY s.map ORDER BY \"Servers\" DESC LIMIT 10",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "barRadius": 0.25,
+                "barWidth": 0.8,
+                "orientation": "horizontal",
+                "showValue": "always",
+                "legend": {
+                    "displayMode": "hidden",
+                    "showLegend": false
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "fillOpacity": 80,
+                        "gradientMode": "none"
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "barchart",
+            "title": "Top 10 Maps by Player Count",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 36
+            },
+            "id": 14,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT s.map as \"Map\", COALESCE(SUM(s.clientnum), 0) as \"Players\" FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' GROUP BY s.map ORDER BY \"Players\" DESC LIMIT 10",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "barRadius": 0.25,
+                "barWidth": 0.8,
+                "orientation": "horizontal",
+                "showValue": "always",
+                "legend": {
+                    "displayMode": "hidden",
+                    "showLegend": false
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "fillOpacity": 80,
+                        "gradientMode": "none"
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "table",
+            "title": "Instance Uptime",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 44
+            },
+            "id": 15,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT ip_address as \"IP Address\", version as \"Version\", webfront_url as \"Webfront\", (uptime || ' seconds')::interval as \"Uptime\", last_heartbeat as \"Last Seen\" FROM instances WHERE last_heartbeat > NOW() - INTERVAL '5 minutes' ORDER BY uptime DESC",
                     "format": "table"
                 }
             ],
@@ -517,7 +783,7 @@
         ]
     },
     "time": {
-        "from": "now-6h",
+        "from": "now-24h",
         "to": "now"
     },
     "timepicker": {},
