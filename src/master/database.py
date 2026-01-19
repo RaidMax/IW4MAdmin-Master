@@ -109,6 +109,16 @@ class Database:
                 )
             """)
 
+            # Service events table - tracks API startups/shutdowns for annotations
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS service_events (
+                    id SERIAL PRIMARY KEY,
+                    event_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    event_type VARCHAR(32) NOT NULL,
+                    message VARCHAR(256)
+                )
+            """)
+
             # Create indexes for common queries
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_history_recorded_at 
@@ -121,6 +131,10 @@ class Database:
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_instances_last_heartbeat 
                 ON instances(last_heartbeat DESC)
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_service_events_time 
+                ON service_events(event_time DESC)
             """)
 
             logger.info("Database tables initialized")
@@ -330,6 +344,15 @@ class Database:
     def is_connected(self) -> bool:
         """Check if database is connected."""
         return self._pool is not None
+
+    def record_service_event(self, event_type: str, message: str = None) -> None:
+        """Record a service event (startup, shutdown, etc.) for annotations."""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO service_events (event_type, message)
+                VALUES (%s, %s)
+            """, (event_type, message))
+            logger.info(f"Recorded service event: {event_type}")
 
     def close(self):
         """Close the connection pool."""

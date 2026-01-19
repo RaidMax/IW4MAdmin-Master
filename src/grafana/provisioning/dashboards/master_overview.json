@@ -1,0 +1,529 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "name": "Service Events",
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "${DS_POSTGRESQL}"
+                },
+                "enable": true,
+                "iconColor": "rgba(255, 96, 96, 1)",
+                "rawQuery": "SELECT event_time as time, event_type as title, message as text, 'Service Event' as tags FROM service_events WHERE $__timeFilter(event_time) ORDER BY event_time"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "type": "stat",
+            "title": "Active Instances",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT COUNT(*) as value FROM instances WHERE last_heartbeat > NOW() - INTERVAL '5 minutes'",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 5
+                            },
+                            {
+                                "color": "green",
+                                "value": 10
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Active Servers",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 0
+            },
+            "id": 2,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT COUNT(*) as value FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes'",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 10
+                            },
+                            {
+                                "color": "green",
+                                "value": 25
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Total Players Online",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 0
+            },
+            "id": 3,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT COALESCE(SUM(s.clientnum), 0) as value FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes'",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 50
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 200
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Today's Peak Players",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 0
+            },
+            "id": 4,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT COALESCE(peak_clients, 0) as value FROM reporting_metrics WHERE metric_date = CURRENT_DATE",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Player Count Over Time",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 4
+            },
+            "id": 5,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT recorded_at as time, client_count as \"Players\" FROM history_metrics WHERE $__timeFilter(recorded_at) ORDER BY recorded_at",
+                    "format": "time_series"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        }
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Instances & Servers Over Time",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 4
+            },
+            "id": 6,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT recorded_at as time, instance_count as \"Instances\", server_count as \"Servers\" FROM history_metrics WHERE $__timeFilter(recorded_at) ORDER BY recorded_at",
+                    "format": "time_series"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "gradientMode": "none",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        }
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "piechart",
+            "title": "Servers by Game",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 12
+            },
+            "id": 7,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT game, COUNT(*) as count FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' GROUP BY game ORDER BY count DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "right",
+                    "showLegend": true
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "mappings": []
+                }
+            }
+        },
+        {
+            "type": "barchart",
+            "title": "Daily Peak Statistics (Last 7 Days)",
+            "gridPos": {
+                "h": 8,
+                "w": 16,
+                "x": 8,
+                "y": 12
+            },
+            "id": 8,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT metric_date::text as \"Date\", peak_instances as \"Peak Instances\", peak_servers as \"Peak Servers\", peak_clients as \"Peak Players\" FROM reporting_metrics WHERE metric_date >= CURRENT_DATE - INTERVAL '7 days' ORDER BY metric_date",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "barRadius": 0.1,
+                "barWidth": 0.8,
+                "groupWidth": 0.7,
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "orientation": "auto",
+                "showValue": "auto",
+                "stacking": "none",
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                },
+                "xTickLabelRotation": 0,
+                "xTickLabelSpacing": 0
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "table",
+            "title": "Active Servers",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 20
+            },
+            "id": 9,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT s.hostname as \"Server Name\", s.game as \"Game\", s.map as \"Map\", s.gametype as \"Mode\", s.clientnum || '/' || s.maxclientnum as \"Players\", s.resolved_external_ip_address || ':' || s.port as \"Address\" FROM servers s JOIN instances i ON s.instance_id = i.id WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes' ORDER BY s.clientnum DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "footer": {
+                    "show": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    }
+                }
+            }
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "iw4madmin",
+        "master"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {},
+                "hide": 2,
+                "includeAll": false,
+                "multi": false,
+                "name": "DS_POSTGRESQL",
+                "options": [],
+                "query": "postgres",
+                "refresh": 1,
+                "regex": "",
+                "type": "datasource"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "IW4MAdmin Master Overview",
+    "uid": "iw4madmin-master",
+    "version": 1,
+    "weekStart": ""
+}

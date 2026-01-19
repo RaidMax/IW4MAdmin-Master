@@ -1,0 +1,24 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: PostgreSQL
+    orgId: 1
+
+datasources:
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    user: iw4madmin_master
+    secureJsonData:
+      password: $__env{GF_DATASOURCE_PASSWORD}
+    jsonData:
+      database: iw4madmin_master
+      sslmode: disable
+      maxOpenConns: 10
+      maxIdleConns: 5
+      connMaxLifetime: 14400
+      postgresVersion: 1800
+      timescaledb: false
+    isDefault: true
+    editable: true

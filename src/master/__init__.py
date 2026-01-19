@@ -71,7 +71,19 @@ api = Api(app)
 # Initialize database
 try:
     db.initialize()
+    db.record_service_event('startup', 'Master API started')
     logger.info("Database initialized successfully")
+    
+    # Register graceful shutdown handler
+    import atexit
+    def record_shutdown():
+        if db.is_connected:
+            try:
+                db.record_service_event('shutdown', 'Master API stopped gracefully')
+            except Exception:
+                pass  # Ignore errors during shutdown
+    atexit.register(record_shutdown)
+    
 except Exception as e:
     logger.warning(f"Database initialization failed: {e}. Running in memory-only mode.")
 

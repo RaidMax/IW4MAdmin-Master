@@ -87,7 +87,7 @@ class Base:
 
     def _remove_staleinstances(self):
         for key, value in list(self.instance_list.items()):
-            if int(time.time()) - value.last_heartbeat > 60:
+            if int(time.time()) - value.last_heartbeat > 300:
                 logger.debug(f'[_remove_staleinstances] removing stale instance {key}')
                 del self.instance_list[key]
                 if key in self.token_list:

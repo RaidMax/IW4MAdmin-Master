@@ -4,23 +4,41 @@ from flask import render_template, request
 from werkzeug.utils import redirect
 
 from .. import app, ctx
-from ..resources.history_graph import HistoryGraph
+from ..config import config
+from ..database import db
 from collections import defaultdict
 
 
 @app.route('/', defaults={'start': 0})
 @app.route('/<int:start>')
 def home(start):
-    _history_graph = HistoryGraph().get(start)
+    # Get current counts - from database if available, otherwise from in-memory context
+    if db.is_connected:
+        with db.get_cursor(commit=False) as cursor:
+            cursor.execute("""
+                SELECT 
+                    (SELECT COUNT(*) FROM instances WHERE last_heartbeat > NOW() - INTERVAL '5 minutes') as instance_count,
+                    (SELECT COUNT(*) FROM servers s JOIN instances i ON s.instance_id = i.id 
+                     WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes') as server_count,
+                    (SELECT COALESCE(SUM(s.clientnum), 0) FROM servers s JOIN instances i ON s.instance_id = i.id 
+                     WHERE i.last_heartbeat > NOW() - INTERVAL '5 minutes') as client_count
+            """)
+            counts = cursor.fetchone()
+            instance_count = counts['instance_count']
+            server_count = counts['server_count']
+            client_count = counts['client_count']
+    else:
+        # Fallback to in-memory context
+        instance_count = len(ctx.instance_list)
+        server_count = sum(len(inst.servers) for inst in ctx.instance_list.values())
+        client_count = sum(s.clientnum for inst in ctx.instance_list.values() for s in inst.servers)
 
     return render_template('index.html',
                            title='API Overview',
-                           history_graph=_history_graph[0]['message'],
-                           instance_count=_history_graph[0]['instance_count'],
-                           client_count=_history_graph[0]['client_count'],
-                           server_count=_history_graph[0]['server_count'],
-                           next_zoom_point=_history_graph[0]['next_zoom_point'],
-                           previous_zoom_point=_history_graph[0]['previous_zoom_point'],
+                           grafana_base_url=config.grafana_base_url,
+                           instance_count={'value': instance_count},
+                           client_count={'value': client_count},
+                           server_count={'value': server_count},
                            page_id='graph')
 
 

@@ -1,0 +1,77 @@
+services:
+  # PostgreSQL 18 Database
+  postgres:
+    image: postgres:18
+    container_name: iw4madmin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: iw4madmin_master
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: iw4madmin_master
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iw4madmin_master -d iw4madmin_master"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # IW4MAdmin Master API (Python 3.14+)
+  master-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iw4madmin-master-api
+    restart: unless-stopped
+    environment:
+      # Database connection (individual vars to handle special chars in passwords)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: iw4madmin_master
+      DB_USER: iw4madmin_master
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      IW4MADMIN_AUTH_KEY: ${JWT_SECRET_KEY:-change-this-in-production}
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: iw4madmin-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Enable anonymous access for embedded panels
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      # Allow embedding in iframes
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      # PostgreSQL datasource password
+      GF_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # PostgreSQL datasource auto-configuration
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  grafana_data:

@@ -32,10 +32,23 @@ class Config:
             self._config = {}
 
         # Environment variable overrides (for container deployments)
-        if os.environ.get('DATABASE_URL'):
+        # Individual DB vars (preferred - handles special characters in passwords)
+        if os.environ.get('DB_HOST'):
+            self._config.setdefault('database', {})
+            self._config['database']['host'] = os.environ.get('DB_HOST')
+            self._config['database']['port'] = int(os.environ.get('DB_PORT', 5432))
+            self._config['database']['name'] = os.environ.get('DB_NAME', 'iw4madmin_master')
+            self._config['database']['user'] = os.environ.get('DB_USER', 'postgres')
+            self._config['database']['password'] = os.environ.get('DB_PASSWORD', '')
+        # DATABASE_URL fallback (for platforms like Heroku)
+        elif os.environ.get('DATABASE_URL'):
             self._parse_database_url(os.environ['DATABASE_URL'])
         if os.environ.get('IW4MADMIN_AUTH_KEY'):
             self._config['jwt_secret_key'] = os.environ['IW4MADMIN_AUTH_KEY']
+        if os.environ.get('GRAFANA_BASE_URL'):
+            self._config.setdefault('grafana', {})['base_url'] = os.environ['GRAFANA_BASE_URL']
+        if os.environ.get('LOG_LEVEL'):
+            self._config.setdefault('logging', {})['level'] = os.environ['LOG_LEVEL']
 
     def _parse_database_url(self, url: str):
         """Parse DATABASE_URL format: postgresql://user:password@host:port/dbname"""
@@ -124,6 +137,10 @@ class Config:
     @property
     def history_max_days(self) -> int:
         return self.get('history', 'max_history_days', default=7)
+
+    @property
+    def grafana_base_url(self) -> str:
+        return self.get('grafana', 'base_url', default='http://localhost:3000')
 
 
 # Singleton instance
