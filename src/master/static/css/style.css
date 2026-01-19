@@ -6,7 +6,7 @@ a.nav-link.active {
     stroke-width: initial !important;
 }
 
-.oi:hover {
+.ph:hover {
     color: #fff !important;
 }
 
@@ -27,6 +27,6 @@ a.nav-link.active {
     cursor: pointer;
 }
 
-#history_graph  {
-    //margin: -4rem;
+#history_graph {
+    /* margin: -4rem; */
 }

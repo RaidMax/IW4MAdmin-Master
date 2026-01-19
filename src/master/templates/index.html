@@ -3,26 +3,25 @@
 {% block meta_description %}Usage graph of IW4MAdmin instance, clients, and servers{% endblock %}
 {% block content %}
 <div class="content">
-    <div class="badge-group mb-5 mr-5" role="group" aria-label="...">
-        <span class="badge badge-primary">{{instance_count.value}}</span>
-        <span class="badge bg-dark text-white">instances</span>
+    <div class="d-inline-flex mb-3 me-3" role="group" aria-label="...">
+        <span class="badge text-bg-primary rounded-end-0">{{instance_count.value}}</span>
+        <span class="badge text-bg-dark rounded-start-0">instances</span>
     </div>
-    <div class="badge-group mb-5 mr-5" role="group" aria-label="...">
-        <span class="badge badge-primary">{{client_count.value}}</span>
-        <span class="badge bg-dark text-white">clients</span>
+    <div class="d-inline-flex mb-3 me-3" role="group" aria-label="...">
+        <span class="badge text-bg-primary rounded-end-0">{{client_count.value}}</span>
+        <span class="badge text-bg-dark rounded-start-0">clients</span>
     </div>
-    <div class="badge-group mb-5 mr-5" role="group" aria-label="...">
-        <span class="badge badge-primary">{{server_count.value}}</span>
-        <span class="badge bg-dark text-white">servers</span>
+    <div class="d-inline-flex mb-3 me-3" role="group" aria-label="...">
+        <span class="badge text-bg-primary rounded-end-0">{{server_count.value}}</span>
+        <span class="badge text-bg-dark rounded-start-0">servers</span>
     </div>
-    <div id="history_graph" class="mt-10">{{history_graph|safe}}</div>
-    <div class="mt-20 ml-10">
+    <div id="history_graph" class="mt-3">{{history_graph|safe}}</div>
+    <div class="mt-4 ms-2">
         <a href="/{{previous_zoom_point}}">
-                    <span id="history_graph_zoom_out" class="h4 oi oi-zoom-out text-muted"
-                          style="cursor:pointer;"></span>
+            <i class="ph ph-magnifying-glass-minus h4 text-muted" style="cursor:pointer;"></i>
         </a>
         <a href="/{{next_zoom_point}}">
-            <span id="history_graph_zoom_in" class="h4 oi oi-zoom-in text-muted" style="cursor:pointer;"></span>
+            <i class="ph ph-magnifying-glass-plus h4 text-muted" style="cursor:pointer;"></i>
         </a>
     </div>
 </div>
@@ -31,12 +30,11 @@
 {% block additional_scripts %}
 <script defer type="text/javascript" src="https://kozea.github.io/pygal.js/latest/pygal-tooltips.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous"></script>
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <script>
     $(document).ready(() => {
-       // $('g.plot').attr('transform', 'translate(30, 0)');
-       //$('svg.pygal-chart').attr('viewBox', '0 0 700 450');
+        // $('g.plot').attr('transform', 'translate(30, 0)');
+        //$('svg.pygal-chart').attr('viewBox', '0 0 700 450');
     });
 
 </script>

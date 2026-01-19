@@ -8,7 +8,7 @@ from flask import request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
-from netaddr import IPAddress, AddrFormatError
+import ipaddress
 
 from .. import ctx, limiter
 from ..config import config
@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 class Instance(Resource):
     decorators = [limiter.limit(config.rate_limit_default)]
+
+    def __init__(self):
+        pass
 
     def get(self, id=None):
         """Get instance(s) - all or by ID."""
@@ -35,7 +38,7 @@ class Instance(Resource):
                 return {'message': 'instance not found'}, 404
 
     def _get_remote_ip(self) -> str:
-        """Get the real client IP from headers or connection."""
+        """Get the remote IP address, handling proxy headers."""
         return (
             request.headers.get('CF-Connecting-IP') or
             request.headers.get('X-Real-IP') or
@@ -50,12 +53,13 @@ class Instance(Resource):
             parsed_ip = None
             try:
                 if 'ip' in server:
-                    parsed_ip = IPAddress(server['ip'])
-            except (AddrFormatError, KeyError):
+                    parsed_ip = ipaddress.ip_address(server['ip'])
+            except ValueError:
                 pass
 
-            if 'ip' not in server or (parsed_ip is not None and (
-                parsed_ip.is_private() or parsed_ip.is_loopback() or server['ip'] == '0.0.0.0'
+            # Update IP if missing, private, or loopback
+            if 'ip' not in server or (parsed_ip and (
+                parsed_ip.is_private or parsed_ip.is_loopback or server['ip'] == '0.0.0.0'
             )):
                 server['ip'] = remote_ip
 
@@ -142,8 +146,8 @@ class Instance(Resource):
             logger.warning(f'Instance validation failed: {err.messages}')
             return {'message': err.messages}, 400
         except Exception as e:
-            logger.error(f'Error processing new instance: {e}')
-            return {'message': 'Invalid request data'}, 400
+            logger.error(f'Error processing new instance: {e}', exc_info=True)
+            return {'message': f'Invalid request data: {str(e)}'}, 400
 
         ctx.add_instance(instance)
 

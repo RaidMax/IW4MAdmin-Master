@@ -1,6 +1,7 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,27 +14,30 @@
   <meta property="og:description" content="{{ self.meta_description() }}">
 
   <title>{{ self.meta_title() }} | IW4MAdmin</title>
-  <link href="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/css/halfmoon-variables.min.css" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic.min.css" rel="stylesheet" />
+  <!-- Halfmoon UI 2.0.2 -->
+  <link href="https://cdn.jsdelivr.net/npm/halfmoon@2.0.2/css/halfmoon.min.css" rel="stylesheet"
+    crossorigin="anonymous">
+  <!-- Phosphor Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
   <link rel="icon" type="image/ico" href="{{ url_for('static', filename='image/favicon.ico') }}">
-  <script defer src="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/js/halfmoon.min.js"></script>
   {% block additional_scripts %}{% endblock %}
 </head>
 
-<body class="dark-mode with-custom-webkit-scrollbars with-custom-css-scrollbars" data-set-preferred-mode-onload="true">
+<body class="dark-mode" data-bs-theme="dark">
   <div class="page-wrapper with-navbar">
     <div class="sticky-alerts"></div>
-    <nav class="navbar">
+    <nav class="navbar navbar-expand-md">
       <a href="/" class="navbar-brand">
         <picture>
-          <source class="img-fluid rounded" type="image/webp" srcset="{{ url_for('static', filename='image/brand.webp') }}">
+          <source class="img-fluid rounded" type="image/webp"
+            srcset="{{ url_for('static', filename='image/brand.webp') }}">
           <img src="{{ url_for('static', filename='image/brand.png') }}" class="img-fluid rounded">
         </picture>
 
       </a>
       <!-- desktop -->
-      <ul class="navbar-nav d-none d-md-flex ml-0">
+      <ul class="navbar-nav d-none d-md-flex ms-0">
         <li class="nav-item">
           <a href="/" class="nav-link {{ 'active' if page_id == 'home' }}">Home</a>
         </li>
@@ -43,21 +47,26 @@
         <li class="nav-item">
           <a href="/setup" class="nav-link {{ 'active' if page_id == 'setup' }}">Help</a>
         </li>
-         <li class="nav-item">
+        <li class="nav-item">
           <a href="/terms" class="nav-link {{ 'active' if page_id == 'terms' }}">Terms</a>
         </li>
       </ul>
-      <div class=" d-none d-md-flex ml-auto">
-        <div class="btn oi btn-square btn-action  mr-10" data-glyph="moon" onclick="halfmoon.toggleDarkMode()" title="Toggle display mode"></div>
-        <a href="javascript:void(0)" class="btn btn-primary" data-cb-type="portal" title="Manage your subscriptions">Manage Subscriptions</a>
+      <div class="d-none d-md-flex ms-auto">
+        <button class="btn btn-square btn-action me-2" onclick="toggleDarkMode()" title="Toggle display mode">
+          <i class="ph ph-moon"></i>
+        </button>
+        <a href="javascript:void(0)" class="btn btn-primary" data-cb-type="portal"
+          title="Manage your subscriptions">Manage Subscriptions</a>
       </div>
       <!-- mobile -->
-      <div class="navbar-content d-md-none ml-auto">
-        <div class="btn oi btn-square btn-action mr-10" data-glyph="moon" onclick="halfmoon.toggleDarkMode()"></div>
+      <div class="navbar-content d-md-none ms-auto">
+        <button class="btn btn-square btn-action me-2" onclick="toggleDarkMode()">
+          <i class="ph ph-moon"></i>
+        </button>
         <div class="dropdown with-arrow">
           <button class="btn btn-primary" data-toggle="dropdown" type="button" id="navbar-dropdown-toggle-btn-1">
             Menu
-            <i class="fa fa-angle-down" aria-hidden="true"></i>
+            <i class="ph ph-caret-down" aria-hidden="true"></i>
           </button>
           <div class="dropdown-menu dropdown-menu-right w-200" aria-labelledby="navbar-dropdown-toggle-btn-1">
             <a href="/" class="dropdown-item">Home</a>
@@ -72,10 +81,16 @@
     <div class="container content-wrapper">
       {% block content %}{% endblock %}
       <div class="content d-flex">
-        <div class="ml-auto badge text-muted font-weight-light font-size-12">ForeverNone</div>
+        <div class="ms-auto badge text-muted font-weight-light font-size-12">ForeverNone</div>
       </div>
     </div>
   </div>
+  <script>
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      document.body.dataset.bsTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+    }
+  </script>
 </body>
 
 </html>

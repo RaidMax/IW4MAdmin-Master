@@ -155,6 +155,52 @@ class Base:
                 if len(history_json) > 0:
                     history = jsonpickle.decode(history_json)
                     logger.info("Loaded history from JSON persistence")
+        
+        # Migration logic: JSON -> PostgreSQL
+        # If DB is connected, history table is empty, and JSON file exists
+        elif db.is_connected and db.is_history_empty() and os.path.exists('./persistence/history.json'):
+            logger.info("Starting history migration from JSON to PostgreSQL...")
+            try:
+                with open('./persistence/history.json', 'r') as in_json:
+                    history_json = in_json.read()
+                    if len(history_json) > 0:
+                        json_history = jsonpickle.decode(history_json)
+                        
+                        # Merge history lists by time
+                        merged_data = []
+                        # Create a map for quick lookup: time -> {inst, client, server}
+                        history_map = {}
+                        
+                        for h in json_history.client_history:
+                            t = h['time']
+                            if t not in history_map: history_map[t] = {'time': t}
+                            history_map[t]['client_count'] = h['count']
+                            
+                        for h in json_history.server_history:
+                            t = h['time']
+                            if t not in history_map: history_map[t] = {'time': t}
+                            history_map[t]['server_count'] = h['count']
+                            
+                        for h in json_history.instance_history:
+                            t = h['time']
+                            if t not in history_map: history_map[t] = {'time': t}
+                            history_map[t]['instance_count'] = h['count']
+                            
+                        # Flatten to list and fill defaults
+                        for item in history_map.values():
+                            merged_data.append({
+                                'time': item['time'],
+                                'instance_count': item.get('instance_count', 0),
+                                'server_count': item.get('server_count', 0),
+                                'client_count': item.get('client_count', 0)
+                            })
+                            
+                        # Insert into DB
+                        if merged_data:
+                            db.batch_insert_history(merged_data)
+                            logger.info(f"Migrated {len(merged_data)} history records to PostgreSQL")
+            except Exception as e:
+                logger.error(f"Failed to migrate history: {e}")
 
         self._fill()
         return history

@@ -242,6 +242,35 @@ class Database:
             """, (limit, offset))
             return [dict(row) for row in cursor.fetchall()]
 
+    def is_history_empty(self) -> bool:
+        """Check if history metrics table is empty."""
+        with self.get_cursor(commit=False) as cursor:
+            cursor.execute("SELECT 1 FROM history_metrics LIMIT 1")
+            return cursor.fetchone() is None
+
+    def batch_insert_history(self, history_data: List[Dict]) -> None:
+        """Batch insert history metrics."""
+        if not history_data:
+            return
+
+        with self.get_cursor() as cursor:
+            # Use execute_values for efficient batch insertion
+            from psycopg2.extras import execute_values
+            
+            execute_values(
+                cursor,
+                """
+                INSERT INTO history_metrics (recorded_at, instance_count, server_count, client_count)
+                VALUES %s
+                """,
+                [(
+                    datetime.fromtimestamp(item['time'], timezone.utc),
+                    item['instance_count'],
+                    item['server_count'],
+                    item['client_count']
+                ) for item in history_data]
+            )
+
     def update_daily_metrics(self) -> None:
         """Update today's reporting metrics."""
         with self.get_cursor() as cursor:

@@ -1,7 +1,7 @@
 import re
 import time
 
-from netaddr import IPAddress, AddrFormatError
+from ipaddress import ip_address
 
 url_regex = re.compile(
     r'^(https?://'
@@ -44,11 +44,11 @@ class InstanceModel(object):
         parsed_ip = None
 
         try:
-            parsed_ip = IPAddress(address)
-        except AddrFormatError:
+            parsed_ip = ip_address(address)
+        except ValueError:
             pass
 
-        if parsed_ip is not None and (parsed_ip.is_private() or parsed_ip.is_loopback()):
+        if parsed_ip is not None and (parsed_ip.is_private or parsed_ip.is_loopback):
             return f'http://{ip}{port}'
 
         return url

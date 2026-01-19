@@ -12,52 +12,52 @@
         {% for game, servers in games.items() %}
 
         <div class="game-server-panel {{'' if loop.first else 'd-none'}}" id="{{game}}_servers">
-            <div class="badge-group mt-10 mb-10" role="group" aria-label="...">
-                <span class="badge badge-primary">{{servers|sum(attribute='clientnum')}}</span>
-                <span class="badge bg-dark text-white">players</span>
+            <div class="d-inline-flex my-3" role="group" aria-label="...">
+                <span class="badge text-bg-primary rounded-end-0">{{servers|sum(attribute='clientnum')}}</span>
+                <span class="badge text-bg-dark rounded-start-0">players</span>
             </div>
-            <div class="badge-group mt-10 mb-10" role="group" aria-label="...">
-                <span class="badge badge-secondary">{{servers|length}}</span>
-                <span class="badge bg-dark text-white">servers</span>
+            <div class="d-inline-flex my-3" role="group" aria-label="...">
+                <span class="badge text-bg-secondary rounded-end-0">{{servers|length}}</span>
+                <span class="badge text-bg-dark rounded-start-0">servers</span>
             </div>
             <table class="table table-striped table-hover table-responsive table-outer-bordered">
                 <thead>
-                <tr>
-                    <th>Server Name</th>
-                    <th>Map Name</th>
-                    <th>Players</th>
-                    <th>Mode</th>
-                    <th class="text-center d-none d-lg-table-cell">Webfront</th>
-                    <th class="text-center d-none d-lg-table-cell">Connect</th>
-                </tr>
+                    <tr>
+                        <th>Server Name</th>
+                        <th>Map Name</th>
+                        <th>Players</th>
+                        <th>Mode</th>
+                        <th class="text-center d-none d-lg-table-cell">Webfront</th>
+                        <th class="text-center d-none d-lg-table-cell">Connect</th>
+                    </tr>
                 </thead>
                 <tbody>
 
-                {% for server in servers|sort(attribute='clientnum', reverse = True) %}
+                    {% for server in servers|sort(attribute='clientnum', reverse = True) %}
 
-                <tr class="server-row" data-ip="{{server.ip}}" data-port="{{server.port}}">
-                    <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}"
-                        class="server-hostname text-break">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
-                    </td>
-                    <td data-map="{{server.map}}" class="server-map text-break">{{server.map}}</td>
-                    <td data-clientnum="{{server.clientnum}}" data-maxclientnum="{{server.maxclientnum}}"
-                        class="server-clientnum">
-                        {{server.clientnum}}/{{server.maxclientnum}}
-                    </td>
-                    <td data-gametype="{{server.gametype}}" class="server-gametype text-break">{{server.gametype}}
-                    </td>
-                    <td class="text-center d-none d-lg-table-cell">
-                        {% if server.instance.webfront_url %}
-                        <a href="{{server.instance.webfront_url}}" target="_blank"><span class="oi oi-globe"></span></a>
-                        {% endif %}
-                    </td>
-                    <td class="text-center d-none d-lg-table-cell" data-toggle="modal"
-                        data-target="#serverModalCenter">
-                        <a href="#serverModalCenter" class="connect-button"><span class="oi oi-play-circle"></span></a>
-                    </td>
-                </tr>
+                    <tr class="server-row" data-ip="{{server.ip}}" data-port="{{server.port}}">
+                        <td data-hostname="{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}"
+                            class="server-hostname text-break">{{server.hostname | regex_replace('\^([0-9]+|:)', '')}}
+                        </td>
+                        <td data-map="{{server.map}}" class="server-map text-break">{{server.map}}</td>
+                        <td data-clientnum="{{server.clientnum}}" data-maxclientnum="{{server.maxclientnum}}"
+                            class="server-clientnum">
+                            {{server.clientnum}}/{{server.maxclientnum}}
+                        </td>
+                        <td data-gametype="{{server.gametype}}" class="server-gametype text-break">{{server.gametype}}
+                        </td>
+                        <td class="text-center d-none d-lg-table-cell">
+                            {% if server.instance.webfront_url %}
+                            <a href="{{server.instance.webfront_url}}" target="_blank"><i class="ph ph-globe"></i></a>
+                            {% endif %}
+                        </td>
+                        <td class="text-center d-none d-lg-table-cell" data-toggle="modal"
+                            data-target="#serverModalCenter">
+                            <a href="#serverModalCenter" class="connect-button"><i class="ph ph-play-circle"></i></a>
+                        </td>
+                    </tr>
 
-                {% endfor %}
+                    {% endfor %}
 
                 </tbody>
             </table>
@@ -69,8 +69,7 @@
 
 {% block additional_scripts %}
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous"></script>
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <script>
 
     $(document).ready(() => {
@@ -88,7 +87,7 @@
             $(e.target).addClass('btn-primary active');
             const game = $(e.target).data('game');
             $('.game-server-panel').addClass('d-none').removeClass('d-block');;
-            $( `#${game}_servers` ).removeClass('d-none').addClass('d-block');
+            $(`#${game}_servers`).removeClass('d-none').addClass('d-block');
         });
     });
 
