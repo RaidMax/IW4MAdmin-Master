@@ -1,0 +1,779 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [
+        {
+            "asDropdown": false,
+            "icon": "dashboard",
+            "includeVars": false,
+            "keepTime": true,
+            "tags": [],
+            "targetBlank": false,
+            "title": "Master Overview",
+            "tooltip": "",
+            "type": "link",
+            "url": "/d/iw4madmin-master"
+        }
+    ],
+    "liveNow": false,
+    "panels": [
+        {
+            "type": "text",
+            "title": "",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 999,
+            "options": {
+                "mode": "html",
+                "content": "<style>\nhtml, body, .main-view, .dashboard-container, .grafana-app, .dashboard-scroll {\n  background-color: #1d2125 !important;\n  background: #1d2125 !important;\n}\n</style>"
+            },
+            "transparent": true
+        },
+        {
+            "type": "row",
+            "title": "Map Trends",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 1
+            },
+            "id": 100,
+            "collapsed": false
+        },
+        {
+            "type": "table",
+            "title": "Map Popularity (Weighted)",
+            "description": "Normalized popularity - accounts for different server sizes. A full 4-slot zombie server = a full 18-slot regular server.",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 2
+            },
+            "id": 1,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    map || ' (' || game || ')' as \"Map\",\n    ROUND(SUM(weighted_player_minutes)::numeric, 1) as \"Weighted Minutes\",\n    ROUND(AVG(avg_fill_rate)::numeric, 3) as \"Avg Fill Rate\",\n    MAX(peak_players) as \"Peak Players\",\n    SUM(unique_servers) as \"Servers\"\nFROM hourly_map_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR game = '$game')\nGROUP BY game, map\nHAVING SUM(weighted_player_minutes) > 0\nORDER BY SUM(weighted_player_minutes) DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true,
+                "footer": {
+                    "show": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto"
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Avg Fill Rate"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percentunit"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "table",
+            "title": "Map Popularity (Raw Player-Minutes)",
+            "description": "Total player engagement time, regardless of server size",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 2
+            },
+            "id": 2,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    map || ' (' || game || ')' as \"Map\",\n    ROUND(SUM(total_player_minutes)::numeric, 1) as \"Player-Minutes\",\n    SUM(appearance_count) as \"Appearances\",\n    MAX(peak_players) as \"Peak\"\nFROM hourly_map_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR game = '$game')\nGROUP BY game, map\nHAVING SUM(total_player_minutes) > 0\nORDER BY SUM(total_player_minutes) DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true,
+                "footer": {
+                    "show": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto"
+                    }
+                }
+            }
+        },
+        {
+            "type": "row",
+            "title": "Server Trends",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 10
+            },
+            "id": 101,
+            "collapsed": false
+        },
+        {
+            "type": "timeseries",
+            "title": "Average Fill Rate Over Time",
+            "description": "Normalized server utilization across all servers",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 11
+            },
+            "id": 3,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    hour_bucket as time,\n    AVG(avg_fill_rate) as \"Fill Rate\"\nFROM hourly_server_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR game = '$game')\nGROUP BY hour_bucket\nORDER BY hour_bucket",
+                    "format": "time_series"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 25,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
+                        "showPoints": "never"
+                    },
+                    "unit": "percentunit",
+                    "max": 1,
+                    "min": 0
+                }
+            }
+        },
+        {
+            "type": "table",
+            "title": "Top Servers (by Weighted Minutes)",
+            "description": "Most active servers, normalized for capacity",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 11
+            },
+            "id": 4,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    COALESCE(s.hostname, hsm.server_id::text) as \"Server\",\n    hsm.game as \"Game\",\n    ROUND(SUM(hsm.weighted_minutes)::numeric, 1) as \"Weighted Minutes\",\n    ROUND(AVG(hsm.avg_fill_rate)::numeric, 3) as \"Avg Fill Rate\",\n    MAX(hsm.max_players) as \"Peak\"\nFROM hourly_server_metrics hsm\nLEFT JOIN servers s ON hsm.server_id = s.id AND hsm.instance_id = s.instance_id\nWHERE hsm.hour_bucket >= $__timeFrom() AND hsm.hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR hsm.game = '$game')\nGROUP BY hsm.server_id, hsm.instance_id, s.hostname, hsm.game\nORDER BY SUM(hsm.weighted_minutes) DESC\nLIMIT 20",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true,
+                "footer": {
+                    "show": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto"
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Avg Fill Rate"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percentunit"
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "red",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "yellow",
+                                            "value": 0.3
+                                        },
+                                        {
+                                            "color": "green",
+                                            "value": 0.6
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "row",
+            "title": "Game Distribution",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 19
+            },
+            "id": 102,
+            "collapsed": false
+        },
+        {
+            "type": "timeseries",
+            "title": "Players by Game Over Time",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 20
+            },
+            "id": 5,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    hour_bucket as time,\n    game as metric,\n    SUM(total_players) as value\nFROM hourly_game_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY hour_bucket, game\nORDER BY hour_bucket",
+                    "format": "time_series"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 50,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "normal"
+                        }
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "piechart",
+            "title": "Player Share by Game",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 20
+            },
+            "id": 6,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    game as metric,\n    SUM(total_players) as value\nFROM hourly_game_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY game\nORDER BY value DESC",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "right",
+                    "showLegend": true,
+                    "values": [
+                        "percent"
+                    ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                    "calcs": [
+                        "sum"
+                    ],
+                    "fields": "",
+                    "values": true
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "row",
+            "title": "Temporal Patterns",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 28
+            },
+            "id": 103,
+            "collapsed": false
+        },
+        {
+            "type": "timeseries",
+            "title": "Total Players Over Time",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 29
+            },
+            "id": 7,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    hour_bucket as time,\n    SUM(total_players) as \"Total Players\"\nFROM hourly_game_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY hour_bucket\nORDER BY hour_bucket",
+                    "format": "time_series"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 30,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "barchart",
+            "title": "Average Players by Hour of Day",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 37
+            },
+            "id": 8,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    EXTRACT(HOUR FROM hour_bucket)::int as \"Hour\",\n    ROUND(AVG(total_players)::numeric, 1) as \"Avg Players\"\nFROM hourly_game_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY EXTRACT(HOUR FROM hour_bucket)\nORDER BY 1",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "barWidth": 0.8,
+                "groupWidth": 0.7,
+                "legend": {
+                    "displayMode": "hidden"
+                },
+                "orientation": "vertical",
+                "xField": "Hour"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "barchart",
+            "title": "Average Players by Day of Week",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 37
+            },
+            "id": 9,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    CASE EXTRACT(DOW FROM hour_bucket)::int\n        WHEN 0 THEN 'Sun'\n        WHEN 1 THEN 'Mon'\n        WHEN 2 THEN 'Tue'\n        WHEN 3 THEN 'Wed'\n        WHEN 4 THEN 'Thu'\n        WHEN 5 THEN 'Fri'\n        WHEN 6 THEN 'Sat'\n    END as \"Day\",\n    ROUND(AVG(total_players)::numeric, 1) as \"Avg Players\"\nFROM hourly_game_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY EXTRACT(DOW FROM hour_bucket)\nORDER BY EXTRACT(DOW FROM hour_bucket)",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "barWidth": 0.8,
+                "groupWidth": 0.7,
+                "legend": {
+                    "displayMode": "hidden"
+                },
+                "orientation": "vertical",
+                "xField": "Day"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "row",
+            "title": "Instance Metrics",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 45
+            },
+            "id": 104,
+            "collapsed": false
+        },
+        {
+            "type": "timeseries",
+            "title": "Active Instances Over Time",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 46
+            },
+            "id": 10,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    hour_bucket as time,\n    COUNT(DISTINCT instance_id) as \"Active Instances\"\nFROM hourly_instance_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY hour_bucket\nORDER BY hour_bucket",
+                    "format": "time_series"
+                }
+            ],
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2
+                    },
+                    "unit": "none"
+                }
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Avg Servers/Instance",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 46
+            },
+            "id": 11,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT ROUND(AVG(server_count)::numeric, 2) as value\nFROM hourly_instance_metrics\nWHERE hour_bucket >= NOW() - INTERVAL '24 hours'",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "textMode": "value",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 2
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Avg Fill Rate (24h)",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 46
+            },
+            "id": 12,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT ROUND(AVG(avg_fill_rate)::numeric, 3) as value\nFROM hourly_server_metrics\nWHERE hour_bucket >= NOW() - INTERVAL '24 hours'",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "textMode": "value",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.2
+                            },
+                            {
+                                "color": "green",
+                                "value": 0.4
+                            }
+                        ]
+                    },
+                    "unit": "percentunit",
+                    "max": 1
+                }
+            }
+        },
+        {
+            "type": "table",
+            "title": "Instance Activity",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 50
+            },
+            "id": 13,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    instance_id as \"Instance\",\n    ROUND(AVG(server_count)::numeric, 1) as \"Avg Servers\",\n    ROUND(AVG(total_players)::numeric, 1) as \"Avg Players\",\n    ROUND(AVG(avg_fill_rate)::numeric, 3) as \"Avg Fill Rate\"\nFROM hourly_instance_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY instance_id\nORDER BY AVG(total_players) DESC\nLIMIT 20",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true,
+                "footer": {
+                    "show": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto"
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Avg Fill Rate"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percentunit"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "refresh": "5m",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "iw4madmin",
+        "analytics",
+        "trends"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {},
+                "hide": 2,
+                "includeAll": false,
+                "multi": false,
+                "name": "DS_POSTGRESQL",
+                "options": [],
+                "query": "postgres",
+                "refresh": 1,
+                "regex": "",
+                "type": "datasource"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "all",
+                    "value": "all"
+                },
+                "definition": "SELECT DISTINCT game FROM hourly_game_metrics WHERE hour_bucket >= NOW() - INTERVAL '7 days' UNION SELECT 'all'",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "game",
+                "options": [],
+                "query": "SELECT DISTINCT game FROM hourly_game_metrics WHERE hour_bucket >= NOW() - INTERVAL '7 days' UNION SELECT 'all' ORDER BY 1",
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-7d",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "IW4MAdmin Analytics Trends",
+    "uid": "iw4madmin-analytics-trends",
+    "version": 14,
+    "weekStart": ""
+}

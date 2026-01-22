@@ -105,23 +105,45 @@ class Instance(Resource):
                 ip_address=instance.ip_address,
                 webfront_url=instance.webfront_url
             )
+            
+            # Collect server and snapshot data for batch operations
+            server_data = []
+            snapshots = []
             for server in instance.servers:
-                db.upsert_server(
-                    server_id=server.id,
-                    instance_id=instance.id,
-                    ip=server.ip,
-                    port=server.port,
-                    version=server.version,
-                    game=server.game,
-                    hostname=server.hostname,
-                    clientnum=server.clientnum,
-                    maxclientnum=server.maxclientnum,
-                    map_name=server.map,
-                    gametype=server.gametype,
-                    resolved_ip=server.resolved_external_ip_address
-                )
+                server_data.append({
+                    'server_id': server.id,
+                    'instance_id': instance.id,
+                    'ip': server.ip,
+                    'port': server.port,
+                    'version': server.version,
+                    'game': server.game,
+                    'hostname': server.hostname,
+                    'clientnum': server.clientnum,
+                    'maxclientnum': server.maxclientnum,
+                    'map_name': server.map,
+                    'gametype': server.gametype,
+                    'resolved_ip': server.resolved_external_ip_address
+                })
+                snapshots.append({
+                    'server_id': server.id,
+                    'instance_id': instance.id,
+                    'game': server.game,
+                    'map': server.map,
+                    'gametype': server.gametype,
+                    'clientnum': server.clientnum,
+                    'maxclientnum': server.maxclientnum
+                })
+            
+            # Batch upsert all servers in one DB call (instead of N calls)
+            if server_data:
+                db.batch_upsert_servers(server_data)
+            
+            # Batch insert all snapshots in one DB call
+            if snapshots:
+                db.batch_record_server_snapshots(snapshots)
         except Exception as e:
             logger.debug(f'Database persistence skipped: {e}')
+
 
         return {'message': 'instance updated successfully'}, 200
 
@@ -160,21 +182,42 @@ class Instance(Resource):
                 ip_address=instance.ip_address,
                 webfront_url=instance.webfront_url
             )
+            
+            # Collect server and snapshot data for batch operations
+            server_data = []
+            snapshots = []
             for server in instance.servers:
-                db.upsert_server(
-                    server_id=server.id,
-                    instance_id=instance.id,
-                    ip=server.ip,
-                    port=server.port,
-                    version=server.version,
-                    game=server.game,
-                    hostname=server.hostname,
-                    clientnum=server.clientnum,
-                    maxclientnum=server.maxclientnum,
-                    map_name=server.map,
-                    gametype=server.gametype,
-                    resolved_ip=server.resolved_external_ip_address
-                )
+                server_data.append({
+                    'server_id': server.id,
+                    'instance_id': instance.id,
+                    'ip': server.ip,
+                    'port': server.port,
+                    'version': server.version,
+                    'game': server.game,
+                    'hostname': server.hostname,
+                    'clientnum': server.clientnum,
+                    'maxclientnum': server.maxclientnum,
+                    'map_name': server.map,
+                    'gametype': server.gametype,
+                    'resolved_ip': server.resolved_external_ip_address
+                })
+                snapshots.append({
+                    'server_id': server.id,
+                    'instance_id': instance.id,
+                    'game': server.game,
+                    'map': server.map,
+                    'gametype': server.gametype,
+                    'clientnum': server.clientnum,
+                    'maxclientnum': server.maxclientnum
+                })
+            
+            # Batch upsert all servers in one DB call (instead of N calls)
+            if server_data:
+                db.batch_upsert_servers(server_data)
+            
+            # Batch insert all snapshots in one DB call
+            if snapshots:
+                db.batch_record_server_snapshots(snapshots)
         except Exception as e:
             logger.debug(f'Database persistence skipped: {e}')
 

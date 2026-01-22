@@ -95,6 +95,22 @@ class Config:
         return self.get('database', 'password', default='')
 
     @property
+    def database_pool_min(self) -> int:
+        """Minimum connections in pool. Override with DB_POOL_MIN env var."""
+        env_val = os.environ.get('DB_POOL_MIN')
+        if env_val:
+            return int(env_val)
+        return self.get('database', 'pool_min', default=5)
+
+    @property
+    def database_pool_max(self) -> int:
+        """Maximum connections in pool. Override with DB_POOL_MAX env var."""
+        env_val = os.environ.get('DB_POOL_MAX')
+        if env_val:
+            return int(env_val)
+        return self.get('database', 'pool_max', default=20)
+
+    @property
     def jwt_secret_key(self) -> str:
         return self.get('jwt_secret_key', default='change-this-in-production')
 

@@ -8,6 +8,14 @@ services:
       POSTGRES_USER: iw4madmin_master
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       POSTGRES_DB: iw4madmin_master
+    # Memory tuning for 3-4GB RAM systems
+    command: >
+      postgres
+        -c shared_buffers=896MB
+        -c effective_cache_size=2.5GB
+        -c work_mem=16MB
+        -c maintenance_work_mem=256MB
+        -c max_parallel_workers_per_gather=2
     volumes:
       - postgres_data:/var/lib/postgresql
     ports:
@@ -69,6 +77,10 @@ services:
       GF_AUTH_BASIC_ENABLED: "false"
       # Allow CSS injection in Text panels
       GF_PANELS_DISABLE_SANITIZE_HTML: "true"
+      # Query caching - reduces database load on dashboard views
+      GF_CACHING_ENABLED: "true"
+      GF_CACHING_BACKEND: "memory"
+      GF_CACHING_MEMORY_TTL: "60s"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro

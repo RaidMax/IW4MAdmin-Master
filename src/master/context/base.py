@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -40,6 +41,55 @@ class Base:
             name='update client and instance count every 30 seconds',
             replace_existing=True
         )
+        # Cleanup old server snapshots (runs hourly)
+        if db.is_connected:
+            self.scheduler.add_job(
+                func=self._cleanup_snapshots,
+                trigger=IntervalTrigger(hours=1),
+                id='cleanup_snapshots',
+                name='Clean up old server snapshots',
+                replace_existing=True
+            )
+            # Aggregate raw snapshots to hourly tables (runs at minute 5 of each hour)
+            # Must run BEFORE downsample to preserve data in hourly tables
+            self.scheduler.add_job(
+                func=self._aggregate_hourly,
+                trigger='cron',
+                minute=5,
+                id='aggregate_hourly',
+                name='Aggregate snapshots to hourly metrics',
+                replace_existing=True
+            )
+            # Delete raw snapshots older than 1 hour (runs at minute 10)
+            # Runs after aggregation to ensure data is preserved
+            self.scheduler.add_job(
+                func=self._downsample_snapshots,
+                trigger='cron',
+                minute=10,
+                id='downsample_snapshots',
+                name='Delete raw snapshots older than 1 hour',
+                replace_existing=True
+            )
+            # Clean up hourly metrics older than 7 days (runs daily at 3:15 AM)
+            self.scheduler.add_job(
+                func=self._cleanup_hourly_metrics,
+                trigger='cron',
+                hour=3,
+                minute=15,
+                id='cleanup_hourly_metrics',
+                name='Clean up old hourly metrics',
+                replace_existing=True
+            )
+            # VACUUM high-churn tables daily at 3:30 AM to reclaim space
+            self.scheduler.add_job(
+                func=self._vacuum_analytics,
+                trigger='cron',
+                hour=3,
+                minute=30,
+                id='vacuum_analytics',
+                name='VACUUM analytics tables',
+                replace_existing=True
+            )
         # Only schedule JSON persistence if database is not connected
         if not db.is_connected:
             self.scheduler.add_job(
@@ -93,6 +143,58 @@ class Base:
                 if key in self.token_list:
                     del self.token_list[key]
         logger.debug(f'[_remove_staleinstances] {len(self.instance_list)} active instances')
+
+    def _cleanup_snapshots(self):
+        """Clean up old server snapshots and aggregate daily metrics."""
+        try:
+            deleted = db.cleanup_old_snapshots(max_days=7)
+            if deleted > 0:
+                logger.info(f'Cleaned up {deleted} old server snapshots')
+            # Also aggregate daily metrics
+            db.aggregate_daily_metrics()
+            # Update table statistics after cleanup
+            db.analyze_analytics_tables()
+        except Exception as e:
+            logger.debug(f'Snapshot cleanup failed: {e}')
+
+    def _downsample_snapshots(self):
+        """Delete raw snapshots older than 1 hour (data is preserved in hourly tables)."""
+        try:
+            deleted = db.downsample_old_snapshots(hours_to_keep_full=1)
+            if deleted > 0:
+                logger.info(f'Deleted {deleted} raw snapshots older than 1 hour')
+                # Update table statistics after significant data changes
+                db.analyze_analytics_tables()
+        except Exception as e:
+            logger.warning(f'Snapshot cleanup failed: {e}')
+
+    def _aggregate_hourly(self):
+        """Aggregate raw snapshots into hourly metrics tables."""
+        try:
+            results = db.aggregate_hourly_metrics()
+            total = sum(results.values())
+            if total > 0:
+                logger.info(f'Aggregated hourly metrics: {results}')
+        except Exception as e:
+            logger.warning(f'Hourly aggregation failed: {e}')
+
+    def _cleanup_hourly_metrics(self):
+        """Clean up hourly metrics older than 7 days."""
+        try:
+            results = db.cleanup_hourly_metrics(max_days=7)
+            total = sum(results.values())
+            if total > 0:
+                logger.info(f'Cleaned up {total} old hourly metric rows')
+        except Exception as e:
+            logger.warning(f'Hourly metrics cleanup failed: {e}')
+
+    def _vacuum_analytics(self):
+        """Run VACUUM on analytics tables to reclaim space from deleted rows."""
+        try:
+            db.vacuum_analytics_tables()
+            logger.info('Completed VACUUM on analytics tables')
+        except Exception as e:
+            logger.warning(f'VACUUM failed: {e}')
 
     def get_instances(self):
         return self.instance_list.values()
