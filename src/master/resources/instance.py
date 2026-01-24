@@ -63,6 +63,55 @@ class Instance(Resource):
             )):
                 server['ip'] = remote_ip
 
+            # Handle resolved_external_ip_address
+            # Priority:
+            # 1. Existing valid IPv4 resolved address
+            # 2. Remote IP (if IPv4)
+            # 3. Webfront URL hostname (if resolves to IPv4)
+            # 4. Remote IP (IPv6 fallback)
+            
+            resolved_ip = server.get('resolved_external_ip_address')
+            candidate_ip = None
+
+            # Helper to validate public IPv4
+            def is_valid_public_ipv4(ip_str):
+                try:
+                    ip = ipaddress.ip_address(ip_str)
+                    return ip.version == 4 and not (ip.is_private or ip.is_loopback or ip_str == '0.0.0.0')
+                except ValueError:
+                    return False
+
+            # 1. Check existing resolved IP
+            if resolved_ip and is_valid_public_ipv4(resolved_ip):
+                candidate_ip = resolved_ip
+
+            # 2. Check remote IP if we don't have a candidate yet
+            if not candidate_ip and is_valid_public_ipv4(remote_ip):
+                candidate_ip = remote_ip
+
+            # 3. Check webfront URL if we still don't have a candidate
+            if not candidate_ip and 'webfront_url' in data:
+                try:
+                    from urllib.parse import urlparse
+                    import socket
+                    hostname = urlparse(data['webfront_url']).hostname
+                    if hostname:
+                        # Try to resolve hostname to IPv4
+                        # getaddrinfo with AF_INET forces IPv4
+                        addrs = socket.getaddrinfo(hostname, None, socket.AF_INET)
+                        if addrs:
+                            webfront_ip = addrs[0][4][0]
+                            if is_valid_public_ipv4(webfront_ip):
+                                candidate_ip = webfront_ip
+                except Exception:
+                    pass  # Ignore resolution errors
+
+            # 4. Fallback to whatever remote_ip is (even if IPv6) if we found nothing
+            if not candidate_ip:
+                candidate_ip = remote_ip
+            
+            server['resolved_external_ip_address'] = candidate_ip
+
             # Default version if not provided
             if 'version' not in server:
                 server['version'] = 'Unknown'

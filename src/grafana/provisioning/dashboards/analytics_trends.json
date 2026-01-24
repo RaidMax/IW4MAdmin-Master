@@ -52,8 +52,8 @@
         },
         {
             "type": "table",
-            "title": "Map Popularity (Weighted)",
-            "description": "Normalized popularity - accounts for different server sizes. A full 4-slot zombie server = a full 18-slot regular server.",
+            "title": "Map Popularity",
+            "description": "Total player engagement time per map. Player-Minutes = absolute engagement, Avg Fill Rate = utilization efficiency.",
             "gridPos": {
                 "h": 8,
                 "w": 12,
@@ -67,7 +67,7 @@
             },
             "targets": [
                 {
-                    "rawSql": "SELECT \n    map || ' (' || game || ')' as \"Map\",\n    ROUND(SUM(weighted_player_minutes)::numeric, 1) as \"Weighted Minutes\",\n    ROUND(AVG(avg_fill_rate)::numeric, 3) as \"Avg Fill Rate\",\n    MAX(peak_players) as \"Peak Players\",\n    SUM(unique_servers) as \"Servers\"\nFROM hourly_map_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR game = '$game')\nGROUP BY game, map\nHAVING SUM(weighted_player_minutes) > 0\nORDER BY SUM(weighted_player_minutes) DESC",
+                    "rawSql": "SELECT \n    map || ' (' || game || ')' as \"Map\",\n    ROUND(SUM(total_player_minutes)::numeric, 1) as \"Player-Minutes\",\n    ROUND((AVG(avg_fill_rate) * 100)::numeric, 1) as \"Avg Fill %\",\n    MAX(peak_players) as \"Peak Players\",\n    SUM(unique_servers) as \"Servers\"\nFROM hourly_map_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR game = '$game')\nGROUP BY game, map\nHAVING SUM(total_player_minutes) > 0\nORDER BY SUM(total_player_minutes) DESC",
                     "format": "table"
                 }
             ],
@@ -87,12 +87,12 @@
                     {
                         "matcher": {
                             "id": "byName",
-                            "options": "Avg Fill Rate"
+                            "options": "Avg Fill %"
                         },
                         "properties": [
                             {
                                 "id": "unit",
-                                "value": "percentunit"
+                                "value": "percent"
                             }
                         ]
                     }
@@ -132,6 +132,136 @@
                         "align": "auto"
                     }
                 }
+            }
+        },
+        {
+            "type": "table",
+            "title": "Map Stability (Stickiness)",
+            "description": "Lower Churn Index = more stable player counts = higher player retention. Based on variance in player counts across hours.",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 10
+            },
+            "id": 14,
+            "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRESQL}"
+            },
+            "targets": [
+                {
+                    "rawSql": "SELECT \n    map || ' (' || game || ')' as \"Map\",\n    ROUND(AVG(peak_players)::numeric, 1) as \"Avg Players\",\n    ROUND(STDDEV(peak_players)::numeric, 2) as \"Std Dev\",\n    ROUND((STDDEV(peak_players) / NULLIF(AVG(peak_players), 0) * 100)::numeric, 1) as \"Churn Index %\",\n    CASE \n        WHEN STDDEV(peak_players) / NULLIF(AVG(peak_players), 0) < 0.2 THEN 'Very Stable'\n        WHEN STDDEV(peak_players) / NULLIF(AVG(peak_players), 0) < 0.4 THEN 'Stable'\n        WHEN STDDEV(peak_players) / NULLIF(AVG(peak_players), 0) < 0.6 THEN 'Moderate'\n        ELSE 'Volatile'\n    END as \"Stability\",\n    COUNT(*) as \"Hours Played\"\nFROM hourly_map_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR game = '$game')\nGROUP BY game, map\nHAVING COUNT(*) >= 3 AND AVG(peak_players) > 1\nORDER BY (STDDEV(peak_players) / NULLIF(AVG(peak_players), 0)) ASC NULLS LAST",
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true,
+                "footer": {
+                    "show": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto"
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Stability"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "type": "value",
+                                        "options": {
+                                            "Very Stable": {
+                                                "color": "green",
+                                                "index": 0
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "value",
+                                        "options": {
+                                            "Stable": {
+                                                "color": "super-light-green",
+                                                "index": 1
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "value",
+                                        "options": {
+                                            "Moderate": {
+                                                "color": "yellow",
+                                                "index": 2
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "value",
+                                        "options": {
+                                            "Volatile": {
+                                                "color": "red",
+                                                "index": 3
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Churn Index %"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "gradient-gauge"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "yellow",
+                                            "value": 40
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 60
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "min",
+                                "value": 0
+                            },
+                            {
+                                "id": "max",
+                                "value": 100
+                            }
+                        ]
+                    }
+                ]
             }
         },
         {
@@ -199,8 +329,8 @@
         },
         {
             "type": "table",
-            "title": "Top Servers (by Weighted Minutes)",
-            "description": "Most active servers, normalized for capacity",
+            "title": "Top Servers (by Player-Minutes)",
+            "description": "Most active servers by total player engagement. Player-Minutes = absolute engagement, Avg Fill % = utilization efficiency.",
             "gridPos": {
                 "h": 8,
                 "w": 12,
@@ -214,7 +344,7 @@
             },
             "targets": [
                 {
-                    "rawSql": "SELECT \n    COALESCE(s.hostname, hsm.server_id::text) as \"Server\",\n    hsm.game as \"Game\",\n    ROUND(SUM(hsm.weighted_minutes)::numeric, 1) as \"Weighted Minutes\",\n    ROUND(AVG(hsm.avg_fill_rate)::numeric, 3) as \"Avg Fill Rate\",\n    MAX(hsm.max_players) as \"Peak\"\nFROM hourly_server_metrics hsm\nLEFT JOIN servers s ON hsm.server_id = s.id AND hsm.instance_id = s.instance_id\nWHERE hsm.hour_bucket >= $__timeFrom() AND hsm.hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR hsm.game = '$game')\nGROUP BY hsm.server_id, hsm.instance_id, s.hostname, hsm.game\nORDER BY SUM(hsm.weighted_minutes) DESC\nLIMIT 20",
+                    "rawSql": "SELECT \n    COALESCE(s.hostname, hsm.server_id::text) as \"Server\",\n    hsm.game as \"Game\",\n    ROUND(SUM(hsm.player_minutes)::numeric, 1) as \"Player-Minutes\",\n    ROUND((AVG(hsm.avg_fill_rate) * 100)::numeric, 1) as \"Avg Fill %\",\n    MAX(hsm.max_players) as \"Peak\"\nFROM hourly_server_metrics hsm\nLEFT JOIN servers s ON hsm.server_id = s.id AND hsm.instance_id = s.instance_id\nWHERE hsm.hour_bucket >= $__timeFrom() AND hsm.hour_bucket <= $__timeTo()\nAND ('$game' = 'all' OR hsm.game = '$game')\nGROUP BY hsm.server_id, hsm.instance_id, s.hostname, hsm.game\nORDER BY SUM(hsm.player_minutes) DESC",
                     "format": "table"
                 }
             ],
@@ -234,12 +364,12 @@
                     {
                         "matcher": {
                             "id": "byName",
-                            "options": "Avg Fill Rate"
+                            "options": "Avg Fill %"
                         },
                         "properties": [
                             {
                                 "id": "unit",
-                                "value": "percentunit"
+                                "value": "percent"
                             },
                             {
                                 "id": "custom.displayMode",
@@ -256,11 +386,11 @@
                                         },
                                         {
                                             "color": "yellow",
-                                            "value": 0.3
+                                            "value": 30
                                         },
                                         {
                                             "color": "green",
-                                            "value": 0.6
+                                            "value": 60
                                         }
                                     ]
                                 }
@@ -690,7 +820,7 @@
             },
             "targets": [
                 {
-                    "rawSql": "SELECT \n    instance_id as \"Instance\",\n    ROUND(AVG(server_count)::numeric, 1) as \"Avg Servers\",\n    ROUND(AVG(total_players)::numeric, 1) as \"Avg Players\",\n    ROUND(AVG(avg_fill_rate)::numeric, 3) as \"Avg Fill Rate\"\nFROM hourly_instance_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY instance_id\nORDER BY AVG(total_players) DESC\nLIMIT 20",
+                    "rawSql": "SELECT \n    instance_id as \"Instance\",\n    ROUND(AVG(server_count)::numeric, 1) as \"Avg Servers\",\n    ROUND(AVG(total_players)::numeric, 1) as \"Avg Players\",\n    ROUND(AVG(avg_fill_rate)::numeric, 3) as \"Avg Fill Rate\"\nFROM hourly_instance_metrics\nWHERE hour_bucket >= $__timeFrom() AND hour_bucket <= $__timeTo()\nGROUP BY instance_id\nORDER BY AVG(total_players) DESC",
                     "format": "table"
                 }
             ],
@@ -774,6 +904,6 @@
     "timezone": "",
     "title": "IW4MAdmin Analytics Trends",
     "uid": "iw4madmin-analytics-trends",
-    "version": 14,
+    "version": 16,
     "weekStart": ""
 }
