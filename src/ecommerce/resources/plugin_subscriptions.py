@@ -5,14 +5,12 @@ from flask_restful import Resource
 import base64
 
 from ecommerce.integrations.logic.customer_logic import CustomerLogic
-from ecommerce.integrations.logic.access_logic import AccessLogic
 from ecommerce.encryption.encryption_helper import encrypt_data
 
 
 class PluginSubscription(Resource):
-    def __init__(self, customer_logic: CustomerLogic = None, access_logic: AccessLogic = None):
+    def __init__(self, customer_logic: CustomerLogic = None):
         self._customer_logic = customer_logic or CustomerLogic()
-        self._access_logic = access_logic or AccessLogic()
         self._content_path = environ.get('ECOMMERCE_CONTENT_PATH', '')
 
     @staticmethod
@@ -42,10 +40,9 @@ class PluginSubscription(Resource):
         #         content = base64.b64encode(encrypted_data).decode('utf-8')
         #         return content
 
-        content_data = self._customer_logic.get_subscribed_content(subscription_id, instance_id)
-
-        # Tier 1.5: record which instance fetched content for this subscription, for
-        # account-sharing detection. Best-effort — never let tracking break delivery.
-        self._access_logic.record_access(subscription_id, instance_id, self._client_ip())
+        # get_subscribed_content records the access (instance + plugins + hashed IP) for
+        # sharing detection; best-effort, never breaks delivery.
+        content_data = self._customer_logic.get_subscribed_content(
+            subscription_id, instance_id, self._client_ip())
 
         return content_data, 200
