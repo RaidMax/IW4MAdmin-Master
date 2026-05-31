@@ -39,3 +39,27 @@ class CustomerLogic:
             'content': item.content,
             'type': determine_content_type(item.content_url)
         } for item in filter(lambda c: hasattr(c, 'content'), customer_subscriptions)]
+
+    def get_entitled_plugin_ids(self, subscription_id: str) -> set:
+        """
+        Returns the set of plugin identifiers the subscriber currently has an active
+        subscription for. The identifier is derived from the content_url basename
+        (without extension), e.g. ".../ZombieStatsPremium.dll" -> "ZombieStatsPremium",
+        which is the value the plugin reports as its plugin_id.
+        :param subscription_id: subscription identifier (customer email)
+        """
+        entitled = set()
+        for item in self._customer_data.get_customer_content_urls_by_email(subscription_id):
+            content_url = getattr(item, 'content_url', None)
+            if content_url:
+                entitled.add(self.plugin_id_from_url(content_url))
+        return entitled
+
+    @staticmethod
+    def plugin_id_from_url(content_url: str) -> str:
+        """Extracts the plugin identifier from a content URL (strip query, path, extension)."""
+        name = content_url.split('?')[0].rstrip('/').split('/')[-1]
+        for ext in ('.dll', '.js', '.cs'):
+            if name.lower().endswith(ext):
+                return name[: -len(ext)]
+        return name
