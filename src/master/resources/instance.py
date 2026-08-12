@@ -45,9 +45,46 @@ class Instance(Resource):
             request.remote_addr
         )
 
+    @staticmethod
+    def _is_public_ipv4(ip_str) -> bool:
+        """True if the value is a literal, publicly routable IPv4 address."""
+        if not ip_str:
+            return False
+        try:
+            ip = ipaddress.ip_address(ip_str)
+        except ValueError:
+            return False
+        return ip.version == 4 and not (
+            ip.is_private or ip.is_loopback or ip.is_link_local or
+            ip.is_unspecified or ip.is_reserved or ip.is_multicast
+        )
+
+    @staticmethod
+    def _resolve_webfront_ipv4(webfront_url) -> str:
+        """Resolve the webfront hostname to a public IPv4 address (None if unavailable)."""
+        if not webfront_url:
+            return None
+        try:
+            from urllib.parse import urlparse
+            import socket
+            hostname = urlparse(webfront_url).hostname
+            if not hostname:
+                return None
+            # getaddrinfo with AF_INET forces IPv4
+            addrs = socket.getaddrinfo(hostname, None, socket.AF_INET)
+            if addrs:
+                webfront_ip = addrs[0][4][0]
+                if Instance._is_public_ipv4(webfront_ip):
+                    return webfront_ip
+        except Exception:
+            pass  # Ignore resolution errors
+        return None
+
     def _process_servers(self, data: dict, remote_ip: str) -> None:
         """Process and normalize server data."""
         servers = data.get('servers', [])
+        webfront_ip = False  # False = not looked up yet (resolution is deferred/cached)
+
         for server in servers:
             # Handle IP address
             parsed_ip = None
@@ -57,59 +94,51 @@ class Instance(Resource):
             except ValueError:
                 pass
 
+            # The address the instance reported for the game server itself
+            server_is_public = self._is_public_ipv4(server.get('ip'))
+
             # Update IP if missing, private, or loopback
             if 'ip' not in server or (parsed_ip and (
                 parsed_ip.is_private or parsed_ip.is_loopback or server['ip'] == '0.0.0.0'
             )):
                 server['ip'] = remote_ip
 
-            # Handle resolved_external_ip_address
+            # Handle resolved_external_ip_address - this is the address clients
+            # connect to, so the game server's own public address always wins.
+            # The instance/webfront host address is only a fallback for servers
+            # bound to internal or loopback addresses.
             # Priority:
-            # 1. Existing valid IPv4 resolved address
-            # 2. Remote IP (if IPv4)
-            # 3. Webfront URL hostname (if resolves to IPv4)
-            # 4. Remote IP (IPv6 fallback)
-            
-            resolved_ip = server.get('resolved_external_ip_address')
+            # 1. Server IP from the payload (if a public IPv4)
+            # 2. Instance-supplied resolved address (if a public IPv4)
+            # 3. Remote IP (if a public IPv4)
+            # 4. Webfront URL hostname (if it resolves to a public IPv4)
+            # 5. Remote IP (IPv6 / unknown fallback)
+
             candidate_ip = None
 
-            # Helper to validate public IPv4
-            def is_valid_public_ipv4(ip_str):
-                try:
-                    ip = ipaddress.ip_address(ip_str)
-                    return ip.version == 4 and not (ip.is_private or ip.is_loopback or ip_str == '0.0.0.0')
-                except ValueError:
-                    return False
+            # 1. Public game server address reported by the instance
+            if server_is_public:
+                candidate_ip = server['ip']
 
-            # 1. Check existing resolved IP
-            if resolved_ip and is_valid_public_ipv4(resolved_ip):
+            # 2. Resolved address supplied by the instance
+            resolved_ip = server.get('resolved_external_ip_address')
+            if not candidate_ip and self._is_public_ipv4(resolved_ip):
                 candidate_ip = resolved_ip
 
-            # 2. Check remote IP if we don't have a candidate yet
-            if not candidate_ip and is_valid_public_ipv4(remote_ip):
+            # 3. Address the heartbeat came from
+            if not candidate_ip and self._is_public_ipv4(remote_ip):
                 candidate_ip = remote_ip
 
-            # 3. Check webfront URL if we still don't have a candidate
-            if not candidate_ip and 'webfront_url' in data:
-                try:
-                    from urllib.parse import urlparse
-                    import socket
-                    hostname = urlparse(data['webfront_url']).hostname
-                    if hostname:
-                        # Try to resolve hostname to IPv4
-                        # getaddrinfo with AF_INET forces IPv4
-                        addrs = socket.getaddrinfo(hostname, None, socket.AF_INET)
-                        if addrs:
-                            webfront_ip = addrs[0][4][0]
-                            if is_valid_public_ipv4(webfront_ip):
-                                candidate_ip = webfront_ip
-                except Exception:
-                    pass  # Ignore resolution errors
+            # 4. Webfront hostname (resolved at most once per request)
+            if not candidate_ip:
+                if webfront_ip is False:
+                    webfront_ip = self._resolve_webfront_ipv4(data.get('webfront_url'))
+                candidate_ip = webfront_ip
 
-            # 4. Fallback to whatever remote_ip is (even if IPv6) if we found nothing
+            # 5. Fallback to whatever remote_ip is (even if IPv6) if we found nothing
             if not candidate_ip:
                 candidate_ip = remote_ip
-            
+
             server['resolved_external_ip_address'] = candidate_ip
 
             # Default version if not provided
