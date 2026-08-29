@@ -13,6 +13,12 @@ class PluginSubscription(Resource):
         self._customer_logic = customer_logic or CustomerLogic()
         self._content_path = environ.get('ECOMMERCE_CONTENT_PATH', '')
 
+    @staticmethod
+    def _client_ip():
+        return (request.headers.get('CF-Connecting-IP')
+                or (request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or None)
+                or request.remote_addr)
+
     def get(self):
         subscription_id = request.args.get('subscription_id')
         instance_id = request.args.get('instance_id')
@@ -34,5 +40,9 @@ class PluginSubscription(Resource):
         #         content = base64.b64encode(encrypted_data).decode('utf-8')
         #         return content
 
-        content_data = self._customer_logic.get_subscribed_content(subscription_id, instance_id)
+        # get_subscribed_content records the access (instance + plugins + hashed IP) for
+        # sharing detection; best-effort, never breaks delivery.
+        content_data = self._customer_logic.get_subscribed_content(
+            subscription_id, instance_id, self._client_ip())
+
         return content_data, 200
